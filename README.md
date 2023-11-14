@@ -3,6 +3,8 @@
 This project is the UI component of the Spellbook framework. It provides a chat interface with features similar to ChatGPT using Llama and
 open large language models.
 
+![UI demo](https://github.com/noco-ai/spellbook-docker/blob/master/ui-demo.gif)
+
 ## Licensing Note
 
 Spellbook UI is based of a UI framework I purchased that has a restrictive license when it comes to commercial use and open source projects. They
