@@ -1,0 +1,16 @@
+.layout-primarycolor-menu {
+    --logo-color: var(--primary-color-text);
+    --menu-bg: linear-gradient(to left top, var(--primary-400), var(--primary-500), var(--primary-600));
+    --root-menuitem-text-color: var(--primary-color-text);
+    --menuitem-text-color: var(--primary-color-text);
+    --menuitem-icon-color: var(--primary-color-text);
+    --menuitem-hover-bg-color: rgba(255,255,255,.1);
+    --popup-submenu-item-text-color: var(--text-color);
+    --popup-submenu-item-icon-color: var(--primary-color);
+    --popup-submenu-item-hover-bg-color: var(--surface-hover);
+}
+
+.layout-dark.layout-primarycolor-menu,
+.layout-dim.layout-primarycolor-menu {
+    --menu-bg: linear-gradient(to left top, var(--primary-300), var(--primary-400), var(--primary-500));
+}

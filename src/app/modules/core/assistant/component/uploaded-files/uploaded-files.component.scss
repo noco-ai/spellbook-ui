@@ -1,0 +1,36 @@
+.upload-card {
+  margin: auto;
+  align-items: center;
+
+  p {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.upload-files {
+  display: flex;
+  justify-content: space-around;
+}
+
+.audio-background {
+  background-position: center;
+  background-size: cover;
+  width: 440px;
+
+  p {
+    width: 100%;
+    text-align: center;
+    color: white;
+    position: absolute;
+    top: 15px;
+  }
+}
+
+.audio-background audio {
+  display: none;
+}
+
+.audio-background:hover audio {
+  display: block;
+}

@@ -1,0 +1,1 @@
+{"core/assistant":{"name":"core/assistant","description":"UI compenents for core LLM assistant","route":[{"path":"","breadcrumb":"Spell Book","module":"assistant.module","module_name":"AssistantModule","type":"application"}]}}

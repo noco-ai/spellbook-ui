@@ -1,0 +1,12 @@
+{
+    "name": "core/servers",
+    "description": "UI compenents for core LLM assistant",
+    "route": [
+        {
+            "path": "servers",
+            "breadcrumb": "Servers",
+            "module": "servers.module",
+            "module_name": "GolemModule"
+        }
+    ]
+}

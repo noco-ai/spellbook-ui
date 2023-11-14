@@ -1,0 +1,98 @@
+// my-component.component.scss
+
+.server-details {
+  .card {
+    //padding: 10px;
+    margin-bottom: 20px;
+  }
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    color: rgb(50 23 159);
+  }
+  50% {
+    color: rgb(72, 30, 242);
+  }
+}
+
+.special-skill {
+  animation: flash 3s infinite;
+  color: rgb(50 23 159);
+  font-weight: bold;
+}
+
+.selectinput ::ng-deep .p-dropdown {
+  width: 100%;
+}
+
+.display-content {
+  display: contents;
+}
+
+.p-field-radiobutton {
+  display: flex;
+  justify-content: left;
+  margin-bottom: 0.6rem;
+  padding-left: 0.8rem;
+  width: 100%;
+}
+
+.p-field-input {
+  margin-bottom: 0.6rem;
+  padding-left: 0.8rem;
+}
+
+.gpu-split-header {
+  padding-left: 0.8rem;
+  margin-top: 1rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  h5 {
+    padding-top: 8px;
+  }
+}
+
+tr {
+  td {
+    min-width: 4rem;
+
+    &:nth-child(2),
+    &:nth-child(3) {
+      min-width: 12rem;
+    }
+
+    //&:nth-child(4) {
+    //    min-width: 8rem;
+    //}
+
+    &:nth-child(6) {
+      .pi.pi-stop-circle {
+        &:hover {
+          cursor: pointer;
+        }
+        //color: rgb(145, 3, 3);
+        //font-size: 1.7em;
+      }
+    }
+  }
+
+  // This assumes that the status could be different. If not, you don't need to use '&'
+  .product-badge {
+    &.status-online {
+      color: red;
+      // Your styles for 'online' status here
+    }
+
+    // Add more classes as needed for different statuses
+    // &.status-offline {
+    //   // Your styles for 'offline' status here
+    // }
+  }
+}

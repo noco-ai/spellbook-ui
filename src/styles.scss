@@ -1,0 +1,69 @@
+$gutter: 1rem; //for primeflex grid system
+
+/* Layout */
+@import "assets/layout/styles/layout/layout.scss";
+
+/* PrimeNG */
+@import "../node_modules/primeng/resources/primeng.min.css";
+@import "../node_modules/primeflex/primeflex.scss";
+@import "../node_modules/primeicons/primeicons.css";
+
+/* Quill Text Editor for p-editor */
+@import "../node_modules/quill/dist/quill.core.css";
+@import "../node_modules/quill/dist/quill.snow.css";
+
+body {
+  min-width: 576px;
+}
+
+.code-block {
+  .code-card-hdr {
+    border: 1px solid var(--surface-border);
+    background-color: var(--surface-ground);
+    border-radius: 12px 12px 0px 0px;
+  }
+
+  .has-nohighlight,
+  .language-graphql {
+    padding: 1rem;
+  }
+
+  pre {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    display: grid;
+
+    code {
+      border-radius: 0px 0px 12px 12px;
+      overflow-x: auto;
+    }
+  }
+}
+
+.text-block {
+  * {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+  code {
+    font-weight: bold;
+  }
+}
+
+.audio-card {
+  margin: 0 20% 0 20%;
+  align-items: center;
+  background-size: cover;
+  height: 170px;
+  display: flex;
+  vertical-align: middle;
+}
+
+.audio-card div {
+  display: none;
+  margin: auto;
+}
+
+.audio-card:hover div {
+  display: block;
+}

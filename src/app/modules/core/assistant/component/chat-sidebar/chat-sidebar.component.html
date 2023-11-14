@@ -1,0 +1,46 @@
+<div
+  class="flex flex-column align-items-center border-bottom-1 surface-border mb-3"
+>
+  <span class="text-900 text-xl font-semibold mb-2">Conversations</span>
+  <button
+    pButton
+    pRipple
+    label="New Conversation"
+    type="button"
+    icon="pi pi-comment"
+    (click)="newConversation()"
+    class="w-full p-button-outlined m-0 mb-3"
+  ></button>
+  <span class="p-input-icon-left w-full">
+    <i class="pi pi-search"></i>
+    <input
+      id="search"
+      type="text"
+      pInputText
+      placeholder="Search"
+      class="w-full"
+      [(ngModel)]="searchValue"
+      (input)="filter()"
+    />
+  </span>
+</div>
+<div class="conversation-list">
+  <div
+    *ngFor="let conversation of filteredConversations"
+    class="flex flex-nowrap justify-content-between align-items-center p-3 pr-0 pl-0 card mb-0 select-none hover:surface-hover transition-colors transition-duration-150"
+    (keydown.enter)="changeView(conversation)"
+    (click)="changeView(conversation)"
+    tabindex="0"
+  >
+    <div class="flex align-items-center">
+      <div class="flex-column">
+        <span class="pl-3 text-900 font-semibold block">{{
+          conversation.topic
+        }}</span>
+      </div>
+    </div>
+    <span class="text-500 font-semibold ml-auto inline pr-2">{{
+      formatTimestamp(conversation.updated_at)
+    }}</span>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+.layout-transparent-menu {
+    --logo-color: var(--primary-color);
+    --menu-bg: var(--surface-overlay);
+    --root-menuitem-text-color: var(--primary-color);
+    --menuitem-text-color: var(--text-color);
+    --menuitem-icon-color: var(--primary-color);
+    --menuitem-hover-bg-color: var(--surface-hover);
+    --popup-submenu-item-text-color: var(--text-color);
+    --popup-submenu-item-icon-color: var(--primary-color);
+    --popup-submenu-item-hover-bg-color: var(--surface-hover);
+}
+
+@media screen and (min-width: $breakpoint) {
+    .layout-container.layout-transparent-menu {
+        &.layout-static,
+        &.layout-slim,
+        &.layout-slim-plus,
+        &.layout-horizontal {
+            .layout-sidebar {
+                background-color: transparent;
+                border-right: 1px solid transparent;
+                box-shadow: none;
+            }
+        }
+    }
+}

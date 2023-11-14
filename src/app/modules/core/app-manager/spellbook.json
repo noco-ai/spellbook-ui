@@ -1,0 +1,12 @@
+{
+  "name": "core/app-manager",
+  "description": "UI components for managing apps and skills",
+  "route": [
+    {
+      "path": "app-manager",
+      "breadcrumb": "App Manager",
+      "module": "app-manager.module",
+      "module_name": "AppManagerModule"
+    }
+  ]
+}

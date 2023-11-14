@@ -1,0 +1,238 @@
+<p-dialog
+  header="Custom Skill"
+  [(visible)]="showCustomSkillDialog"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '30vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <p class="line-height-3 m-0">
+    This allows you to create you own skill definitions and load custom models
+    with Elemental Golem. Select the handler that works with the model you are
+    trying to use, copy an example of an existing skill definition and edit it
+    to your needs. See
+    <a href="https://link-to-dock">documentation</a> for details on how these
+    configuration files work.
+  </p>
+  <div class="grid formgrid">
+    <div class="col-6 mt-4">
+      <p-dropdown
+        placeholder="Skill Handler"
+        class="selectinput w-full"
+        [options]="handlerOptions"
+        [(ngModel)]="customSkillHandler"
+        (onChange)="updateExampleList($event)"
+      ></p-dropdown>
+    </div>
+    <div class="col-6 mt-4">
+      <p-dropdown
+        placeholder="Copy Existing"
+        class="selectinput w-full"
+        [options]="skillExampleOptions"
+        (onChange)="updateExampleText($event)"
+      ></p-dropdown>
+    </div>
+    <div class="col-12 mt-4">
+      <label class="mt-2">Skill Definition</label>
+      <textarea
+        rows="12"
+        cols="30"
+        class="p-inputtext p-component p-element w-full"
+        pInputTextarea
+        [(ngModel)]="customSkillDefinition"
+      ></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-check"
+      (click)="submitCustomSkill()"
+      label="Create Skill"
+      class="p-button-outlined"
+    ></button>
+  </ng-template>
+</p-dialog>
+<p-toast></p-toast>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<div class="grid">
+  <online-skills class="col-12"></online-skills>
+  <!--<installed-skills class="col-12"></installed-skills>-->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Servers</h5>
+        <p-button
+          styleClass="p-button-rounded p-button-outlined"
+          icon="pi pi-refresh"
+          pTooltip="Refresh Servers"
+          (click)="refreshServers()"
+        ></p-button>
+      </div>
+      <p-table
+        [value]="servers"
+        dataKey="server_id"
+        [expandedRowKeys]="expandedRows"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="caption">
+          <button
+            pButton
+            icon="pi pi-fw {{ isExpanded ? 'pi-minus' : 'pi-plus' }}"
+            label="{{ isExpanded ? 'Collapse All' : 'Expand All' }}"
+            (click)="expandAll()"
+          ></button>
+          <div class="flex table-header"></div>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem"></th>
+            <th pSortableColumn="server_label">
+              Server
+              <p-sortIcon field="server_label"></p-sortIcon>
+            </th>
+            <th pSortableColumn="harddrive">
+              Hard Drive <p-sortIcon field="hd.used"></p-sortIcon>
+            </th>
+            <th pSortableColumn="ram">
+              RAM <p-sortIcon field="ram.used"></p-sortIcon>
+            </th>
+            <th pSortableColumn="gpuram">
+              GPU RAM <p-sortIcon field="ram.used"></p-sortIcon>
+            </th>
+            <th pSortableColumn="status">
+              Status <p-sortIcon field="status"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-server let-expanded="expanded">
+          <tr>
+            <td>
+              <button
+                type="button"
+                pButton
+                pRipple
+                [pRowToggler]="server"
+                class="p-button-text p-button-rounded p-button-plain"
+                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+              ></button>
+            </td>
+            <td style="min-width: 12rem">
+              {{ server.server_label }}
+            </td>
+            <td style="min-width: 8rem">{{ server.hd_summary }}</td>
+            <td style="min-width: 10rem">
+              {{ server.ram_summary }}
+            </td>
+            <td style="min-width: 10rem">
+              {{ server.gpu_summary }}
+            </td>
+            <td>
+              <p-tag
+                [severity]="determineSeverity(server.status)"
+                value="{{ server.status }}"
+              ></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="rowexpansion" let-server>
+          <tr>
+            <td colspan="6" class="server-details">
+              <div class="flex justify-content-between">
+                <div class="card">
+                  <h5 class="text-center w-full">GPU RAM</h5>
+                  <p-knob
+                    [step]="1"
+                    [min]="0"
+                    [max]="100"
+                    [size]="200"
+                    [readonly]="true"
+                    valueTemplate="{value}%"
+                    [(ngModel)]="server.gpu_ram_used"
+                  ></p-knob>
+                </div>
+                <div class="card">
+                  <h5 class="text-center w-full">System RAM</h5>
+                  <p-knob
+                    [step]="1"
+                    [min]="0"
+                    [max]="100"
+                    [size]="200"
+                    [readonly]="true"
+                    valueTemplate="{value}%"
+                    [(ngModel)]="server.ram.percent_used"
+                  ></p-knob>
+                </div>
+                <div class="card">
+                  <h5 class="text-center w-full">HD Usage</h5>
+                  <p-knob
+                    [step]="1"
+                    [min]="0"
+                    [max]="100"
+                    [size]="200"
+                    [readonly]="true"
+                    valueTemplate="{value}%"
+                    [(ngModel)]="server.hd.percent_used"
+                  ></p-knob>
+                </div>
+              </div>
+              <h5>GPU Details</h5>
+              <p-table
+                [value]="server.gpu"
+                dataKey="name"
+                responsiveLayout="scroll"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="name">
+                      GPU Name
+                      <p-sortIcon field="name"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="memory_total">
+                      Total Memory
+                      <p-sortIcon field="memory_total"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="memory_used">
+                      Used Memory
+                      <p-sortIcon field="memory_used"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="memory_free">
+                      Free Memory
+                      <p-sortIcon field="memory_free"></p-sortIcon>
+                    </th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-gpu>
+                  <tr>
+                    <td>{{ gpu.name }}</td>
+                    <td>{{ gpu.memory_total_summary }}</td>
+                    <td>{{ gpu.memory_used_summary }}</td>
+                    <td>{{ gpu.memory_free_summary }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+              <div class="flex justify-content-between mt-4 mb-4">
+                <h5 class="pt-3">Installed Skills</h5>
+              </div>
+              <skill-list
+                [server]="server"
+                [listType]="'installed'"
+              ></skill-list>
+              <div class="flex justify-content-between mt-4 mb-4">
+                <h5 class="pt-3">Available Skills</h5>
+                <button
+                  pButton
+                  icon="pi pi-fw pi-plus"
+                  label="Custom Skill"
+                  class="p-button-outlined"
+                  (click)="createCustomSkill(server)"
+                ></button>
+              </div>
+              <skill-list [server]="server"></skill-list>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

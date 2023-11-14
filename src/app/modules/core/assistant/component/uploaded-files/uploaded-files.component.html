@@ -1,0 +1,51 @@
+<div *ngIf="fileList.length" class="upload-files mb-6">
+  <div *ngFor="let fileName of fileList; let i = index; let last = last"  style="max-width: 60%">
+    <ng-container [ngSwitch]="getFileType(fileName)">
+      <div *ngSwitchCase="'image'" class="card upload-card m-0 p-0 pt-6 pb-4">
+        <div class="align-content-center">
+          <img
+            [src]="baseUrl + fileName"
+            style="height: fit-content"
+            width="100%"
+          />
+          <p>
+            {{ getFilenameFromPath(fileName) }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngSwitchCase="'audio'"
+        class="card p-0 audio-background"
+        [style]="'background-image: url(' + baseUrl + 'asset/spellbook/core/sound-upload.jpeg)'"
+        style="position: relative"
+      >
+        <div class="align-content-center pt-1 pb-2 audio-card">
+          <audio controls>
+            <source
+              [src]="baseUrl + fileName"
+              type="audio/wav"
+            />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+        <p>
+          {{ getFilenameFromPath(fileName) }}
+        </p>
+      </div>
+
+      <div *ngSwitchDefault class="card upload-card m-0 p-0 pt-6 pb-4">
+        <div class="align-content-center">
+          <img
+            src="baseUrl + 'asset/spellbook/core/ai-icon.jpeg'"
+            style="height: fit-content"
+            width="100%"
+          />
+          <p style="width: 100%; text-align: center">
+            {{ getFilenameFromPath(fileName) }}
+          </p>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

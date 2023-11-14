@@ -1,0 +1,172 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-dialog
+  header="Run Skill"
+  [(visible)]="showRunSkillDialog"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '30vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <p class="line-height-3 m-0">
+    Select the device you want to run the skill on and press OK.
+  </p>
+  <h6>Run On</h6>
+  <div class="grid formgrid">
+    <div class="p-field-radiobutton" *ngFor="let val of runSkillDeviceOptions">
+      <p-radioButton
+        name="selectedDevice"
+        [value]="val.value"
+        [(ngModel)]="runSkillSelectedDeviceOptions"
+        label="{{ val.label }}"
+        [disabled]="val.disabled"
+      ></p-radioButton>
+    </div>
+    <div
+      *ngIf="
+        currentRunSkill &&
+        currentRunSkill.multi_gpu_support &&
+        runSkillSelectedDeviceOptions == 'split'
+      "
+    >
+      <h6 class="gpu-split-header">GPU Split in GB</h6>
+      <div
+        class="flex flex-column gap-2 p-field-input"
+        *ngFor="let val of currentRunSkill.gpu"
+      >
+        <label htmlFor="{{ val.device }}">{{ val.name }}</label>
+        <input
+          id="{{ val.device }}"
+          type="text"
+          pInputText
+          [(ngModel)]="val.memory_split"
+        />
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-check"
+      (click)="runSkillSubmit()"
+      label="Ok"
+      class="p-button-outlined"
+    ></button>
+  </ng-template>
+</p-dialog>
+<p-table
+  dataKey="use"
+  [expandedRowKeys]="expandedUse"
+  (click)="expandRow()"
+  responsiveLayout="scroll"
+  [value]="
+    listType === 'installed'
+      ? server.skill_groups_installed
+      : server.skill_groups
+  "
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 4rem"></th>
+      <th pSortableColumn="use">
+        Name
+        <p-sortIcon field="use"></p-sortIcon>
+      </th>
+      <th pSortableColumn="num_skills">
+        # Skills
+        <p-sortIcon field="num_skills"></p-sortIcon>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-use let-expanded="expanded">
+    <tr *ngIf="use.num_skills > 0">
+      <td style="min-width: 4rem">
+        <button
+          type="button"
+          pButton
+          pRipple
+          [pRowToggler]="use"
+          class="p-button-text p-button-rounded p-button-plain"
+          [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+        ></button>
+      </td>
+      <td>{{ use.use }}</td>
+      <td>{{ use.num_skills }}</td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="rowexpansion" let-use>
+    <td colspan="3">
+      <p-table [value]="use.skills" dataKey="name" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="label">
+              Name
+              <p-sortIcon field="label"></p-sortIcon>
+            </th>
+            <th pSortableColumn="ram">
+              ~ RAM
+              <p-sortIcon field="ram"></p-sortIcon>
+            </th>
+            <th pSortableColumn="precision">
+              Precision
+              <p-sortIcon field="precision"></p-sortIcon>
+            </th>
+            <th>GPU</th>
+            <th>CPU</th>
+            <th>{{ listType === "installed" ? "Run" : "Install" }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-skill>
+          <tr>
+            <td
+              [ngClass]="{
+                'special-skill': specialLabels.includes(skill.label)
+              }"
+            >
+              {{ skill.label }}
+            </td>
+            <td>
+              {{ skill.ram_label }}
+            </td>
+            <td>
+              <p-tag severity="warning" value="{{ skill.precision }}"></p-tag>
+            </td>
+            <td>
+              <span
+                *ngIf="skill.device.includes('CUDA')"
+                class="p-button-icon pi pi-check"
+              ></span>
+            </td>
+            <td>
+              <span
+                *ngIf="skill.device.includes('CPU')"
+                class="p-button-icon pi pi-check"
+              ></span>
+            </td>
+            <td>
+              <p-button
+                *ngIf="skill.downloading"
+                styleClass="p-button-rounded p-button-outlined"
+                icon="pi pi-spin pi-spinner"
+                pTooltip="Download Skill"
+              ></p-button>
+              <p-button
+                *ngIf="!skill.installed && !skill.downloading"
+                styleClass="p-button-rounded p-button-outlined"
+                icon="pi pi-cloud-download"
+                pTooltip="Install Skill"
+                (click)="installSkill($event, skill)"
+              ></p-button>
+              <p-button
+                *ngIf="skill.installed"
+                styleClass="p-button-rounded p-button-outlined"
+                icon="pi pi-desktop"
+                pTooltip="Run Skill"
+                (click)="runSkill(skill)"
+              ></p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </td>
+  </ng-template>
+</p-table>

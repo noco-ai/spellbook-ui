@@ -1,0 +1,92 @@
+<p-dialog
+  header="Configure Skill"
+  [(visible)]="showConfigureSkillDialog"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '30vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <skill-configuration
+    [data]="skillData"
+    [template]="skillTemplate"
+    (formSubmitted)="configureSkillSubmit()"
+  >
+  </skill-configuration>
+</p-dialog>
+<p-toast></p-toast>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<div class="card">
+  <div class="card-header">
+    <h5>Online Skills</h5>
+    <p-button
+      styleClass="p-button-rounded p-button-outlined"
+      icon="pi pi-refresh"
+      pTooltip="Refresh Skills"
+      (click)="refreshServers()"
+    ></p-button>
+  </div>
+
+  <p-table [value]="skills" dataKey="index" responsiveLayout="scroll">
+    <ng-template pTemplate="caption">
+      <div class="flex table-header"></div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="label">
+          Name
+          <p-sortIcon field="label"></p-sortIcon>
+        </th>
+        <th pSortableColumn="server_label">
+          Server
+          <p-sortIcon field="server_label"></p-sortIcon>
+        </th>
+        <th pSortableColumn="device_label">
+          Device
+          <p-sortIcon field="device_label"></p-sortIcon>
+        </th>
+        <th pSortableColumn="ram">
+          ~ RAM <p-sortIcon field="ram"></p-sortIcon>
+        </th>
+        <th pSortableColumn="status">
+          Status <p-sortIcon field="status"></p-sortIcon>
+        </th>
+        <th>Configure</th>
+        <th>Stop</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-skill>
+      <tr>
+        <td>{{ skill.shortcut }}{{ skill.label }}</td>
+        <td>{{ skill.server_label }}</td>
+        <td>{{ skill.device_label }}</td>
+        <td>{{ skill.ram_summary }}</td>
+        <td>
+          <p-tag
+            [severity]="determineSeverity(skill.thread_status)"
+            value="{{ skill.thread_status }}"
+          ></p-tag>
+        </td>
+        <td>
+          <p-button
+            *ngIf="skill.configurable"
+            styleClass="p-button-rounded p-button-outlined"
+            icon="pi pi-sliders-h"
+            pTooltip="Configure Skill"
+            (click)="configureSkill($event, skill)"
+          ></p-button>
+        </td>
+        <td>
+          <p-button
+            *ngIf="
+              skill.thread_status == 'ONLINE' || skill.thread_status == 'ERROR'
+            "
+            styleClass="p-button-rounded p-button-outlined"
+            icon="pi pi-stop"
+            pTooltip="Stop Skill"
+            (click)="stopSkill($event, skill)"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,0 +1,142 @@
+<div class="grid formgrid p-3">
+  <form class="full-width" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div
+      class="field"
+      *ngFor="let option of template.options; let option_index = index"
+    >
+      <label>{{ option.label }}</label>
+      <div *ngIf="option.type === 'string'">
+        <input
+          class="p-inputtext p-component p-element"
+          type="text"
+          pInputText
+          [formControlName]="option.name"
+        />
+      </div>
+      <div *ngIf="option.type === 'secret'">
+        <input
+          class="p-inputtext p-component p-element"
+          type="password"
+          pInputText
+          [formControlName]="option.name"
+        />
+      </div>
+      <div *ngIf="option.type === 'multistring'">
+        <div formArrayName="{{ option.name }}">
+          <div
+            class="align-right mb-2"
+            *ngFor="
+              let ctrl of getFormArrayControl(option.name).controls;
+              let i = index
+            "
+          >
+            <input
+              class="p-inputtext p-component p-element"
+              type="text"
+              pInputText
+              [formControlName]="i"
+            />
+            <button
+              pButton
+              icon="pi pi-minus"
+              class="p-button-secondary p-element p-ripple p-button p-component p-button-icon-only"
+              style="margin-left: 8px"
+              (click)="removeMultiStringItem(option.name, i)"
+            ></button>
+          </div>
+        </div>
+        <div class="align-right">
+          <button
+            pButton
+            icon="pi pi-plus"
+            class="p-button-secondary p-element p-ripple p-button p-component p-button-icon-only"
+            (click)="addMultiStringItem($event, option.name)"
+          ></button>
+        </div>
+      </div>
+
+      <div *ngIf="option.type === 'checkbox'">
+        <div
+          class="p-field-checkbox"
+          *ngFor="let val of option.values; let i = index"
+        >
+          <p-checkbox
+            name="{{ option.name }}"
+            [formControlName]="option.name"
+            [value]="val"
+            [(ngModel)]="option.selectedOptions"
+          ></p-checkbox>
+          <label>{{ val }}</label>
+        </div>
+      </div>
+
+      <div *ngIf="option.type === 'radio'">
+        <div class="p-field-radiobutton" *ngFor="let val of option.values">
+          <p-radioButton
+            name="{{ option.name }}"
+            [value]="val"
+            [formControlName]="option.name"
+          ></p-radioButton>
+          <label>{{ val }}</label>
+        </div>
+      </div>
+
+      <div *ngIf="option.type === 'switch'">
+        <p-inputSwitch [formControlName]="option.name"></p-inputSwitch>
+      </div>
+
+      <div *ngIf="option.type === 'textarea'">
+        <textarea
+          rows="5"
+          cols="30"
+          class="p-inputtext p-component p-element"
+          [formControlName]="option.name"
+          pInputTextarea
+        ></textarea>
+      </div>
+
+      <div *ngIf="option.type === 'multiselect'">
+        <p-multiSelect
+          class="selectinput"
+          [options]="option.select_options"
+          [formControlName]="option.name"
+        ></p-multiSelect>
+      </div>
+
+      <div *ngIf="option.type === 'dropdown'">
+        <p-dropdown
+          class="selectinput"
+          [options]="option.select_options"
+          [formControlName]="option.name"
+        ></p-dropdown>
+      </div>
+
+      <div *ngIf="option.type === 'slider'">
+        <input
+          class="p-inputtext p-component p-element"
+          type="text"
+          pInputText
+          [disabled]="true"
+          [(ngModel)]="sliderValue[option_index]"
+          (keydown)="sliderKeyDown($event, option.max, option.min)"
+          [formControlName]="option.name"
+        />
+        <p-slider
+          [min]="option.min"
+          [max]="option.max"
+          [(ngModel)]="sliderValue[option_index]"
+          [formControlName]="option.name"
+          [step]="option.step"
+        ></p-slider>
+      </div>
+    </div>
+    <div class="align-right">
+      <button
+        class="p-button-outlined"
+        pButton
+        type="submit"
+        label="Save"
+      ></button>
+    </div>
+  </form>
+</div>

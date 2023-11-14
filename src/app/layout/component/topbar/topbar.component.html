@@ -1,0 +1,48 @@
+<div class="layout-topbar">
+  <div class="topbar-start">
+    <button
+      #menubutton
+      type="button"
+      class="topbar-menubutton p-link p-trigger"
+      (click)="onMenuButtonClick()"
+    >
+      <i class="pi pi-bars"></i>
+    </button>
+    <app-breadcrumb class="topbar-breadcrumb"></app-breadcrumb>
+  </div>
+
+  <div class="topbar-end">
+    <ul class="topbar-menu">
+      <!--<li class="topbar-search">
+                <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input
+                        type="text"
+                        pInputText
+                        placeholder="Search"
+                        class="w-12rem sm:w-full"
+                    />
+                </span>
+            </li>-->
+      <!--<li class="ml-3">
+                <button
+                    pButton
+                    type="button"
+                    icon="pi pi-cog"
+                    style="font-size: 2rem"
+                    class="p-button-lg p-button-text p-button-secondary p-button-rounded flex-shrink-0"
+                    (click)="onProfileButtonClick()"
+                ></button>
+            </li>-->
+      <!--<li class="topbar-profile">
+                <button
+                    type="button"
+                    class="p-link"
+                    (click)="onProfileButtonClick()"
+                >
+                    <img src="assets/layout/images/avatar.png" alt="Profile" />
+                </button>
+            </li>-->
+    </ul>
+  </div>
+</div>

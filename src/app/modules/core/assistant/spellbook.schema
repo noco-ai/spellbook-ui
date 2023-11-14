@@ -1,0 +1,92 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "route": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "breadcrumb": {
+                        "type": "string"
+                    },
+                    "module": {
+                        "type": "string"
+                    },
+                    "module_name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                         "enum": ["application", "root"],
+                         "default": "application"
+                    }
+                },
+                "required": ["path", "breadcrumb", "module", "module_name"]
+            }
+        },
+        "menu_group":  {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },                    
+                    "key": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "number"
+                    }
+                },
+                "required": ["label", "key", "sort_order"],
+                "additionalProperties": false
+            }
+        },
+        "menu_item":  {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "route": {
+                        "type": "string"
+                    },
+                    "spell_index": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "parent": {
+                        "type": "string"
+                    }
+                },
+                "required": ["label", "icon", "group", "route"],
+                "additionalProperties": false
+            }
+        }
+    },
+    "required": ["name", "description"]
+}

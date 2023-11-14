@@ -1,0 +1,13 @@
+$primaryColor: #fcd34d !default;
+$primaryLightColor: rgba(252, 211, 77, .5) !default;
+$primaryDarkColor: scale-color($primaryColor, $lightness: -5%) !default;
+$primaryDarkerColor: scale-color($primaryColor, $lightness: -10%) !default;
+$primaryTextColor: #1c2127 !default;
+$primary500:#f59e0b !default;
+
+$highlightBg:rgba(252, 211, 77, .16) !default;
+$highlightTextColor: rgba(255,255,255,.87) !default;
+
+@import '../_variables';
+@import '../../designer/_components';
+@import '../_extensions';

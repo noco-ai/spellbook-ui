@@ -1,0 +1,12 @@
+{
+  "name": "core/app-settings",
+  "description": "UI components for displaying information on installed spells.",
+  "route": [
+    {
+      "path": "settings/:namespace/:module",
+      "breadcrumb": "Settings",
+      "module": "app-settings.module",
+      "module_name": "AppSettingsModule"
+    }
+  ]
+}

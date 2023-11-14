@@ -1,0 +1,64 @@
+<p-dialog
+  header="Configure Spell"
+  [(visible)]="showConfigureSpellDialog"
+  showEffect="fade"
+  [modal]="true"
+  [style]="{ width: '30vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <skill-configuration
+    [data]="spellConfigurationData"
+    [template]="spellConfigurationTemplate"
+    (formSubmitted)="configureSpellSubmit()"
+  >
+  </skill-configuration>
+</p-dialog>
+<div class="card px-4 py-8 md:px-6 lg:px-8">
+  <div class="flex flex-wrap mb-4">
+    <div class="lg:w-2 pl-0 lg:pr-4">
+      <img
+        src="{{ baseIconUrl }}{{ activeSpell.icon }}"
+        alt="Image"
+        class="w-full border-round"
+      />
+    </div>
+    <div class="lg:w-10 pr-0 lg:pl-4 mt-3 lg:mt-0">
+      <div class="flex">
+        <div
+          class="font-bold text-3xl mb-1 text-900"
+          style="font-family: 'game-pixel'; color: var(--logo-color) !important"
+        >
+          {{ useSpellLabels ? activeSpell.spell_label : activeSpell.label }}
+        </div>
+        <div class="flex align-items-center ml-auto">
+          <button
+            pButton
+            pRipple
+            type="button"
+            icon="pi pi-sliders-h"
+            class="p-button-outlined p-button-secondary mr-3"
+            (click)="configureSpell(activeSpell)"
+            *ngIf="canConfigureSpell"
+          ></button>
+        </div>
+      </div>
+
+      <div
+        *ngIf="activeSpell.skill_dependencies.length"
+        class="line-height-3 mt-0 p-0 req-skills mb-3"
+      >
+        <b>Required Skills:</b>
+        <p
+          *ngFor="let cur of activeSpell.skill_status"
+          class="{{ cur.class_name }}"
+        >
+          {{ cur.skill }}
+        </p>
+      </div>
+      <p
+        class="line-height-3 mt-0 mb-3 p-0 spellcard"
+        [innerHTML]="allowHtml(activeSpell.card)"
+      ></p>
+    </div>
+  </div>
+</div>

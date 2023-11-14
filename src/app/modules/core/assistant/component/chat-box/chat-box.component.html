@@ -1,0 +1,384 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-toast></p-toast>
+<p-dialog
+  header="Edit Conversation"
+  [(visible)]="showEditConversationDialog"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-3 pr-4">
+    <input
+      class="w-full"
+      type="text"
+      pInputText
+      [value]="conversation.topic"
+      placeholder="Conversation Topic"
+      #conversationTopic
+    />
+    <label class="mt-4">Preferred Model</label>
+    <p-dropdown
+      class="selectinput w-full"
+      [options]="modelOptions"
+      [(ngModel)]="conversation.use_model"
+    ></p-dropdown>
+    <label class="mt-4">Router Settings</label>
+    <p-multiSelect
+      class="selectinput w-full"
+      [options]="routerConfigOptions"
+      [(ngModel)]="conversation.router_config"
+    ></p-multiSelect>
+    <label class="mt-4">Top K</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="conversation.top_k"
+      [disabled]="true"
+    />
+    <p-slider
+      [min]="0"
+      [max]="1"
+      [step]="0.05"
+      [(ngModel)]="conversation.top_k"
+      class="w-full"
+    ></p-slider>
+    <label class="mt-4">Top P</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      style="width: 100%"
+      [(ngModel)]="conversation.top_p"
+      [disabled]="true"
+    />
+    <p-slider
+      [min]="0"
+      [max]="1"
+      [step]="0.05"
+      [(ngModel)]="conversation.top_p"
+      class="w-full"
+    ></p-slider>
+    <label class="mt-4">Temperature</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      style="width: 100%"
+      [(ngModel)]="conversation.temperature"
+      [disabled]="true"
+    />
+    <p-slider
+      [min]="0"
+      [max]="2"
+      [step]="0.05"
+      [(ngModel)]="conversation.temperature"
+      class="w-full"
+    ></p-slider>
+    <!--<label class="mt-4">Seed</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      pInputText
+      style="width: 100%"
+      [(ngModel)]="conversation.seed"
+      [pKeyFilter]="'int'"
+    />-->
+    <label class="mt-4">System Message</label>
+    <textarea
+      rows="5"
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      [(ngModel)]="conversation.system_message"
+      pInputTextarea
+    ></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-file"
+      (click)="submitEditConversation()"
+      label="Save"
+      class="p-button-outlined"
+    ></button>
+  </ng-template>
+</p-dialog>
+<div style="display: none">{{ counter }}</div>
+<div class="flex flex-column h-full">
+  <div
+    class="flex align-items-center border-bottom-1 surface-border p-3 lg:p-6"
+  >
+    <div class="relative flex align-items-center mr-3">
+      <img
+        src="{{ baseIconUrl }}asset/spellbook/core/ai-icon.jpeg"
+        alt="{{ conversation.topic }}"
+        class="w-4rem h-4rem border-circle shadow-4"
+      />
+    </div>
+    <div class="mr-2">
+      <span class="text-900 font-semibold block">{{ conversation.topic }}</span>
+      <p-button
+        (click)="editConversation(conversation)"
+        label="Edit"
+        styleClass="p-button-link"
+        [style]="{ padding: '0px' }"
+      ></p-button>
+    </div>
+    <div class="flex align-items-center ml-auto">
+      <button
+        pButton
+        pRipple
+        (click)="deleteConversation($event, conversation.id)"
+        *ngIf="conversation.id"
+        type="button"
+        icon="pi pi-trash"
+        class="p-button-outlined p-button-secondary mr-3"
+      ></button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        (click)="showSidebar()"
+        icon="pi pi-comments"
+        label="Conversations"
+        class="p-button-outlined p-button-secondary"
+      ></button>
+    </div>
+  </div>
+  <!--[scrollTop]="chatWindow.scrollHeight"-->
+  <div #chatWindow>
+    <div
+      *ngFor="
+        let message of conversation.messages;
+        let i = index;
+        let last = last
+      "
+    >
+      <div
+        *ngIf="message.role !== 'user'"
+        class="grid grid-nogutter p-5 border-bottom-1 surface-border ai-message"
+        style="background-color: var(--surface-50)"
+      >
+        <div class="mr-3 mt-1 text-center sm-hide">
+          <p-avatarGroup styleClass="mb-1 block">
+            <p-avatar
+              *ngFor="let icon of message.icon"
+              image="{{ baseIconUrl }}{{ icon }}"
+              size="large"
+              shape="circle"
+            ></p-avatar>
+          </p-avatarGroup>
+          {{ message.shortcuts }}
+        </div>
+        <div class="col">
+          <div class="w-full flex justify-content-between message-header">
+            <div class="mr-3 mt-1 text-center sm-icons">
+              <p-avatarGroup styleClass="mb-1 block">
+                <p-avatar
+                  *ngFor="let icon of message.icon"
+                  image="{{ baseIconUrl }}{{ icon }}"
+                  size="large"
+                  shape="circle"
+                ></p-avatar>
+              </p-avatarGroup>
+              &nbsp;{{ message.shortcuts }}
+            </div>
+            <p class="text-700 mb-0">
+              {{ parseDate(message.created_at) }}
+            </p>
+            <button
+              pButton
+              pRipple
+              type="button"
+              (click)="copyToClipboard(message.raw)"
+              icon="pi pi-copy"
+              class="p-button-rounded p-button-text"
+            ></button>
+          </div>
+
+          <div *ngFor="let block of message.blocks">
+            <p
+              *ngIf="block.type == 'text'"
+              class="pre-line text-block"
+              [innerHTML]="allowHtml(block.content)"
+            ></p>
+            <div
+              class="card code-block p-0 mb-6 mt-0"
+              *ngIf="block.type == 'code'"
+            >
+              <div
+                class="flex code-card-hdr align-items-center justify-content-between mb-0"
+              >
+                <h5></h5>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-copy"
+                  class="p-button-text"
+                  (click)="copyToClipboard(block.raw)"
+                ></button>
+              </div>
+              <div [innerHTML]="allowHtml(block.content)"></div>
+            </div>
+          </div>
+
+          <p *ngIf="message.content.length" class="pre-line">
+            {{ message.content }}
+          </p>
+
+          <div *ngIf="last && progressVisible" class="progress-bar mt-4 mb-4">
+            <p>{{ progressLabel }}</p>
+            <p-progressBar
+              [value]="progressValue"
+              [showValue]="false"
+              [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+            ></p-progressBar>
+          </div>
+          <!--<div
+            *ngIf="message.html.length"
+            [innerHTML]="allowHtml(message.html)"
+          ></div>-->
+          <!--<div class="card p-0" *ngIf="message.text.length">
+            <div class="flex code-card align-items-center justify-content-between mb-0">
+                <h5></h5>
+                <button pButton type="button" icon="pi pi-copy" class="p-button-text"
+                        ></button>
+            </div>
+            <pre><code class="language-javascript">{{ message.text }}</code></pre>
+          </div>-->
+        </div>
+      </div>
+      <div
+        *ngIf="message.role === 'user'"
+        class="grid grid-nogutter p-5 border-bottom-1 surface-border user-message"
+      >
+        <div class="mr-3 mt-1 center-text sm-hide">
+          <p-avatarGroup styleClass="mb-1 block">
+            <p-avatar
+              *ngFor="let icon of message.icon"
+              image="{{ baseIconUrl }}{{ icon }}"
+              size="large"
+              shape="circle"
+            ></p-avatar>
+          </p-avatarGroup>
+          {{ message.shortcuts }}
+        </div>
+        <div class="col">
+          <div class="w-full flex justify-content-between message-header">
+            <div class="mr-3 mt-1 text-center sm-icons">
+              <p-avatarGroup styleClass="mb-1 block">
+                <p-avatar
+                  *ngFor="let icon of message.icon"
+                  image="{{ baseIconUrl }}{{ icon }}"
+                  size="large"
+                  shape="circle"
+                ></p-avatar>
+              </p-avatarGroup>
+              &nbsp;{{ message.shortcuts }}
+            </div>
+            <p class="text-700 mb-0">
+              {{ parseDate(message.created_at) }}
+            </p>
+            <div class="flex">
+              <button
+                *ngIf="
+                  canEdit && i == conversation.messages.length - 2 && i != 0
+                "
+                (click)="deleteMessage($event, message)"
+                pButton
+                pRipple
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text"
+              ></button>
+              <!--<button
+                *ngIf="canEdit"
+                (click)="startEdit(message, editableDiv)"
+                pButton
+                pRipple
+                type="button"
+                icon="pi pi-file-edit"
+                class="p-button-rounded p-button-text"
+              ></button>-->
+            </div>
+          </div>
+          <div class="w-full">
+            <chat-uploaded-files
+              [fileList]="message.filesList"
+            ></chat-uploaded-files>
+            <p
+              class="pre-line"
+              #editableDiv
+              [attr.contenteditable]="message.is_editing"
+              [innerHtml]="message.content"
+            ></p>
+          </div>
+        </div>
+        <div
+          [ngClass]="{ hidden: !message.is_editing }"
+          class="w-full message-buttons pt-2"
+        >
+          <!--<button
+            pButton
+            pRipple
+            type="button"
+            icon="pi pi-refresh"
+            label="Regenerate"
+            class="p-button-outlined"
+            (click)="startRegenerate(message, editableDiv)"
+          ></button>-->
+          <!--<button
+            pButton
+            pRipple
+            type="button"
+            label="Cancel"
+            (click)="cancelEdit(message, editableDiv)"
+            class="p-button-outlined ml-3 p-button-secondary"
+          ></button>-->
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="uploadedFiles.length" class="mt-6">
+    <chat-uploaded-files [fileList]="uploadedFiles"></chat-uploaded-files>
+  </div>
+  <div
+    style="position: relative"
+    class="p-3 md:p-4 lg:p-6 flex flex-column sm:flex-row align-items-center mt-auto border-top-1 surface-border gap-3"
+    (dragover)="onDragOver($event)"
+    (drop)="onDrop($event)"
+  >
+    <button
+      *ngIf="canStopGeneration && !progressVisible"
+      pButton
+      pRipple
+      type="button"
+      icon="pi pi-stop"
+      label="Stop Generation"
+      class="p-button-outlined stop-generation"
+      (click)="stopGeneration()"
+    ></button>
+
+    <div
+      #textarea
+      [style.max-height]="maxHeight"
+      (input)="adjustHeight($event)"
+      (keydown)="handleKeyDown($event)"
+      (paste)="onPaste($event)"
+      class="text-prompt w-full p-inputtext p-component p-element pre-line"
+      contenteditable="true"
+    ></div>
+
+    <div class="flex w-full sm:w-auto gap-3">
+      <button
+        pButton
+        pRipple
+        label="Send"
+        [disabled]="!canEdit"
+        icon="pi pi-send"
+        class="w-full sm:w-auto"
+        (click)="sendMessage()"
+      ></button>
+    </div>
+  </div>
+</div>

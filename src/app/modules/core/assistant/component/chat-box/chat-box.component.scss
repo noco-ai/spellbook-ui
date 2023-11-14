@@ -1,0 +1,113 @@
+.pre-line {
+  white-space: pre-line;
+  &:focus-visible {
+    outline: 0 none;
+  }
+}
+
+.center-text {
+  text-align: center;
+}
+
+.progress-bar {
+  margin-left: 20% !important;
+  margin-right: 20% !important;
+
+  p {
+    text-align: center;
+    font-weight: bold;
+  }
+}
+
+.sm-hide {
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+.sm-icons {
+  @media (max-width: 767px) {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  display: none;
+}
+
+.stop-generation {
+  position: absolute; 
+  top: -80px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  background-color: var(--surface-0);
+  &:hover {
+    background-color: var(--surface-0) !important;
+  }
+}
+
+.selectinput ::ng-deep .p-dropdown {
+  width: 100%;
+}
+
+.selectinput ::ng-deep .p-multiselect {
+  width: 100%;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  align-items: center;
+  height: 44px;
+
+  p {
+    height: 24px;
+  }
+  div button {
+    font-size: 0.8rem;
+  }
+}
+
+.edit-button {
+  button {
+    padding: 0px;
+  }
+}
+
+.message-buttons {
+  justify-content: center;
+  display: flex;
+}
+
+//.hidden {
+//  display: none !important;
+//}
+
+@media (min-width: 767px) {
+  .user-message,
+  .ai-message {
+    &:hover {
+      .message-header button {
+        display: flex;
+      }
+    }
+    .message-header button {
+      display: none;
+    }
+  }
+}
+
+.text-prompt {
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &:focus {
+    outline: 0 none;
+    outline-offset: 0;
+    box-shadow: var(--focus-ring);
+    border-color: var(--primary-color);
+  }
+  overflow-y: auto;
+  overflow-x: hidden;
+}
