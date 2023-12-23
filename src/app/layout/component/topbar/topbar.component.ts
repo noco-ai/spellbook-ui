@@ -1,24 +1,30 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import { LayoutService } from '../../service/app.layout.service';
+import { Component, ElementRef, ViewChild } from "@angular/core";
+import { LayoutService } from "../../service/app.layout.service";
 
 @Component({
-    selector: 'app-topbar',
-    templateUrl: './topbar.component.html',
+  selector: "app-topbar",
+  templateUrl: "./topbar.component.html",
 })
 export class AppTopbarComponent {
-    @ViewChild('menubutton') menuButton!: ElementRef;
+  @ViewChild("menubutton") menuButton!: ElementRef;
 
-    constructor(public layoutService: LayoutService) {}
+  constructor(public layoutService: LayoutService) {}
 
-    onMenuButtonClick() {
-        this.layoutService.onMenuToggle();
-    }
+  onMenuButtonClick() {
+    this.layoutService.onMenuToggle();
+  }
 
-    onProfileButtonClick() {
-        this.layoutService.showProfileSidebar();
-    }
+  onProfileButtonClick() {
+    this.layoutService.showProfileSidebar();
+  }
 
-    onConfigButtonClick() {
-        this.layoutService.showConfigSidebar();
-    }
+  onConfigButtonClick() {
+    this.layoutService.showConfigSidebar();
+  }
+
+  logout() {
+    localStorage.removeItem("auth_token");
+    window.location.href = "#/login";
+    window.location.reload();
+  }
 }

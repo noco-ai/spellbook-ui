@@ -16,6 +16,15 @@ body {
   min-width: 576px;
 }
 
+@media screen and (max-width: 991px) {
+  .layout-container .topbar-breadcrumb {
+    display: block !important;
+  }
+  .layout-container .content-breadcrumb {
+    display: none !important;
+  }
+}
+
 .code-block {
   .code-card-hdr {
     border: 1px solid var(--surface-border);

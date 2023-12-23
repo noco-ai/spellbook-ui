@@ -1,0 +1,368 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-toast></p-toast>
+<p-dialog
+  header="Save Multi-shot"
+  [(visible)]="showSaveChat"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-3 pr-4 pt-0">
+    <div class="col-12 p-0">
+      <input
+        class="w-full"
+        type="text"
+        pInputText
+        placeholder="Unique Key"
+        [(ngModel)]="uniqueKey"
+        [pKeyFilter]="checkKeyRegex"
+      />
+    </div>
+    <div class="col-12 p-0 flex justify-content-between">
+      <div></div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-save"
+        class="p-button-secondary flex-shrink-0 mt-3"
+        (click)="saveChat(false, undefined, this.uniqueKey)"
+      >
+        &nbsp;Save
+      </button>
+    </div>
+  </div>
+</p-dialog>
+<div class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <p-dropdown
+      class="w-full mr-3"
+      [options]="chatOptions"
+      placeholder="Saved Set"
+      [(ngModel)]="currentId"
+      (click)="updateChat()"
+    ></p-dropdown>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-save"
+      class="p-button-secondary flex-shrink-0 p-button-icon-only p-button-outlined mr-2"
+      (click)="showSave()"
+      [disabled]="!systemMessage.length"
+    ></button>
+    <button
+      *ngIf="currentId != 0 && currentId != null"
+      pButton
+      type="button"
+      icon="pi pi-trash"
+      class="p-button-secondary flex-shrink-0 p-button-icon-only p-button-outlined"
+      (click)="deleteChat()"
+    ></button>
+  </div>
+
+  <div class="col-12 pb-0 lg:col-6 xl:col-6">
+    System Message
+    <textarea
+      rows="5"
+      cols="30"
+      class="p-inputtext p-component p-element w-full mt-1"
+      pInputTextarea
+      [(ngModel)]="systemMessage"
+    ></textarea>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6 sm:pt-0">
+    <p-accordion class="mt-4" style="display: block">
+      <p-accordionTab header="Generation Settings" [selected]="true">
+        <div class="grid flex">
+          <div class="col-4">
+            <label class="mt-4">Temperature</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="temperature"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="temperature"
+              [min]="0.01"
+              [max]="2"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4">
+            <label class="mt-4">Top K</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="topK"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="topK"
+              [min]="1"
+              [max]="256"
+              [step]="1"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4">
+            <label>Min P</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="minP"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="minP"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4">
+            <label>Seed</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="seed"
+            />
+          </div>
+          <div class="col-4">
+            <label>Mirostat</label>
+            <p-dropdown
+              class="selectinput w-full mr-4 mt-1"
+              [options]="mirostatOptions"
+              [(ngModel)]="mirostat"
+            ></p-dropdown>
+          </div>
+          <div class="col-4">
+            <label>Top P</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="topP"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="topP"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4" *ngIf="mirostat != 0"></div>
+          <div class="col-4" *ngIf="mirostat != 0">
+            <label>Mirostat ETA</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="mirostatEta"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="mirostatEta"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4" *ngIf="mirostat != 0">
+            <label>Mirostat TAU</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="mirostatTau"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="mirostatTau"
+              [min]="0.1"
+              [max]="10"
+              [step]="0.1"
+              class="w-full"
+            ></p-slider>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+
+  <ng-container *ngFor="let app of examplePairs; let i = index">
+    <div
+      class="col-12 lg:col-6 xl:col-6 m-0 p-0 pl-3 flex justify-content-between"
+    >
+      <div class="m-0 p-0">Input Example #{{ i + 1 }}</div>
+      <div class="p-0 m-0 mr-4">
+        <a
+          style="color: var(--primary-color)"
+          *ngIf="app.exclude && app.exclude.includes(i)"
+          (click)="copyExample($event, i)"
+          href="#"
+        >
+          Copy to Input
+        </a>
+      </div>
+    </div>
+    <div
+      class="hidden col-6 lg:flex xl:flex m-0 p-0 pl-3 justify-content-between"
+    >
+      <div class="p-0 m-0">Output Example #{{ i + 1 }}</div>
+      <div class="mr-3">
+        <label class="mr-1" for="input-checkbox{{ i }}">Exclude Example</label>
+        <p-checkbox
+          [value]="i"
+          [(ngModel)]="app.exclude"
+          inputId="input-checkbox{{ i }}"
+        ></p-checkbox>
+      </div>
+    </div>
+    <div class="col-12 lg:col-6 xl:col-6 pt-1">
+      <textarea
+        [rows]="calculateRows(app.user)"
+        class="p-inputtext p-component p-element w-full"
+        [(ngModel)]="app.user"
+        name="input-{{ i }}"
+        pInputTextarea
+      ></textarea>
+    </div>
+    <div
+      class="col-12 flex lg:hidden xl:hidden m-0 p-0 pl-3 justify-content-between"
+    >
+      <div class="p-0 m-0">Output Example #{{ i + 1 }}</div>
+      <div class="mr-3">
+        <label class="mr-1" for="input-checkbox{{ i }}">Exclude Example</label>
+        <p-checkbox
+          [value]="i"
+          [(ngModel)]="app.exclude"
+          inputId="input-checkbox{{ i }}"
+        ></p-checkbox>
+      </div>
+    </div>
+    <div class="col-12 lg:col-6 xl:col-6 pt-1">
+      <textarea
+        [rows]="calculateRows(app.assistant)"
+        class="p-inputtext p-component p-element w-full"
+        [(ngModel)]="app.assistant"
+        name="output-{{ i }}"
+        pInputTextarea
+      ></textarea>
+    </div>
+  </ng-container>
+</div>
+<div class="grid flex mt-4 sm:mt-1">
+  <div class="col-3 m-0 p-0 pl-3">Input</div>
+  <div class="col-3 p-0 m-0 flex justify-content-between">
+    <div>&nbsp;</div>
+    <div></div>
+  </div>
+
+  <div
+    class="hidden col-6 lg:flex xl:flex m-0 p-0 pl-3 justify-content-between"
+  >
+    <div class="p-0 m-0">Output</div>
+    <div class="mr-3">
+      <a
+        *ngIf="output.length"
+        href="#"
+        style="color: var(--primary-color)"
+        (click)="copyOutputToClipboard($event)"
+        >Copy to Clipboard</a
+      >
+    </div>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6 pt-1">
+    <textarea
+      rows="5"
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      pInputTextarea
+      [(ngModel)]="input"
+      [rows]="calculateRows(input)"
+    ></textarea>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6 pt-1">
+    <textarea
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      pInputTextarea
+      [rows]="calculateRows(output)"
+      [(ngModel)]="output"
+      disabled="true"
+    ></textarea>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-minus"
+      class="p-button flex-shrink-0 p-button-icon-only p-button-outlined mr-2"
+      (click)="removeExample()"
+      [disabled]="numExamples == 0"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-plus"
+      class="p-button flex-shrink-0 p-button-icon-only p-button-outlined"
+      (click)="addExample()"
+    ></button>
+    <div class="ml-3" style="width: 200px; display: inline-block">
+      <input
+        class="p-inputtext p-component p-element w-full"
+        type="text"
+        pInputText
+        [(ngModel)]="maxNewTokens"
+        [disabled]="true"
+        pTooltip="Maximum new tokens to generate"
+      />
+      <p-slider
+        [(ngModel)]="maxNewTokens"
+        [min]="32"
+        [max]="16384"
+        [step]="1"
+        class="w-full"
+      ></p-slider>
+    </div>
+  </div>
+
+  <div
+    class="col-12 lg:col-6 xl:col-6 lg:justify-content-between xl:justify-content-between flex"
+  >
+    <div></div>
+    <div>
+      <p-dropdown
+        class="w-full mr-3"
+        [options]="numGenerationOptions"
+        [(ngModel)]="numGenerations"
+        placeholder="# Generations"
+      ></p-dropdown>
+      <p-multiSelect
+        class="w-full mr-3 models-select"
+        [options]="modelOptions"
+        [(ngModel)]="selectedModels"
+        placeholder="Test Models"
+      ></p-multiSelect>
+      <button
+        [disabled]="!input.length || !selectedModels.length"
+        pButton
+        type="button"
+        icon="pi {{ isGenerating ? 'pi-stop' : 'pi-send' }}"
+        (click)="executeChat()"
+      >
+        &nbsp;{{ isGenerating ? "Stop" : "Generate" }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,214 @@
+<p-toast></p-toast>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<div class="card grid m-1 lg:pr-7 xl:pr-7">
+  <div class="col-12 lg:col-6 xl:col-6 p-0 mb-6 lg:p-6">
+    <p-galleria
+      [containerStyle]="{ width: '100%', margin: 'auto' }"
+      [value]="images"
+      [showThumbnails]="true"
+      [responsiveOptions]="galleriaResponsiveOptions"
+      [(activeIndex)]="activeImageIndex"
+    >
+      <ng-template pTemplate="item" let-item>
+        <img [src]="item.itemImageSrc" style="width: 100%; display: block" />
+      </ng-template>
+      <ng-template pTemplate="thumbnail" let-item>
+        <div
+          class="grid nogutter justify-center"
+          (click)="onThumbnailClick(item)"
+        >
+          <img [src]="item.thumbnailImageSrc" style="display: block" />
+        </div>
+      </ng-template>
+    </p-galleria>
+    <div *ngIf="progressVisible" class="progress-bar mt-4 mb-4">
+      <p-progressBar
+        [value]="progressValue"
+        [showValue]="false"
+        [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+      ></p-progressBar>
+    </div>
+    <div *ngIf="activeImage" class="grid mt-2">
+      <div class="col-4 pb-0">
+        <b>Guidance Scale:</b> {{ activeImage.guidance_scale }}
+      </div>
+      <div class="col-3 pb-0"><b>Height:</b> {{ activeImage.height }}px</div>
+      <div class="col-5 pb-0"><b>Seed:</b> {{ activeImage.seed }}</div>
+      <div class="col-4 pb-0"><b>Steps:</b> {{ activeImage.steps }}</div>
+      <div class="col-3 pb-0"><b>Width:</b> {{ activeImage.width }}px</div>
+      <div class="col-5 pb-0"><b>Model:</b> {{ activeImage.model_name }}</div>
+      <div class="col-12 pb-0"><b>Prompt:</b> {{ activeImage.prompt }}</div>
+    </div>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6 m-0 p-0">
+    <div class="col-12 m-0 p-0 lg:mt-6 xl:mt-6">
+      <label class="mt-4">Prompt</label>
+      <textarea
+        rows="5"
+        cols="30"
+        class="p-inputtext p-component p-element w-full mb-3"
+        pInputTextarea
+        [(ngModel)]="imagePrompt"
+        (keydown)="handlePromptKeydown($event)"
+      ></textarea>
+    </div>
+    <p-accordion>
+      <p-accordionTab header="Advanced" [selected]="false">
+        <div class="grid">
+          <div class="col-12">
+            <label class="mt-4">Negative Prompt</label>
+            <textarea
+              rows="5"
+              cols="30"
+              class="p-inputtext p-component p-element w-full"
+              pInputTextarea
+              [(ngModel)]="negativePrompt"
+            ></textarea>
+          </div>
+          <div class="col-6">
+            <label>Guidance Scale</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="guidanceScale"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="guidanceScale"
+              [min]="0"
+              [max]="20"
+              [step]="0.05"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-6">
+            <label>Seed</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="seed"
+            />
+          </div>
+          <div class="col-6">
+            <label>Height</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="height"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="height"
+              [min]="16"
+              [max]="2048"
+              [step]="16"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-6">
+            <label>Width</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="width"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="width"
+              [min]="16"
+              [max]="2048"
+              [step]="16"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-6">
+            <label># Steps</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="steps"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="steps"
+              [min]="1"
+              [max]="60"
+              [step]="1"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-6">
+            <label># Generations</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="numGenerations"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="numGenerations"
+              [min]="1"
+              [max]="8"
+              [step]="1"
+              class="w-full"
+              (ngModelChange)="onChangeNumGenerations()"
+            ></p-slider>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <div class="col-12 p-0 m-0 pt-3">
+      <div class="w-full mb-4 flex justify-content-between">
+        <div>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="deleteImage()"
+            [disabled]="!activeImage"
+          ></button>
+
+          <button
+            pButton
+            type="button"
+            icon="pi pi-download"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="downloadImage()"
+            [disabled]="!activeImage"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-clone"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only"
+            (click)="cloneSettings()"
+            [disabled]="!activeImage"
+          ></button>
+        </div>
+
+        <p-multiSelect
+          class="selectinput"
+          [options]="modelOptions"
+          [(ngModel)]="useModels"
+        ></p-multiSelect>
+
+        <button
+          pButton
+          type="button"
+          icon="pi pi-image"
+          class="p-button-primary flex-shrink-0"
+          (click)="generateImage()"
+          label="Generate"
+          [disabled]="!useModels.length || numGenerated != numToGenerated"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>

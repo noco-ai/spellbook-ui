@@ -8,6 +8,10 @@ export interface Conversation {
   use_model: string | null;
   top_k: number;
   top_p: number;
+  min_p: number;
+  mirostat: number;
+  mirostat_eta: number;
+  mirostat_tau: number;
   temperature: number;
   seed: number | null;
   system_message: string | null;

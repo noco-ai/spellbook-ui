@@ -9,6 +9,22 @@
   text-align: center;
 }
 
+:host ::ng-deep {
+  .p-accordion-tab:not(.p-accordion-tab-active) {
+    .p-toggleable-content {
+      height: 0;
+      overflow: hidden;
+    }
+  }
+
+  .p-accordion-tab.p-accordion-tab-active {
+    .p-toggleable-content {
+      height: auto !important;
+      overflow: auto !important;
+    }
+  }
+}
+
 .progress-bar {
   margin-left: 20% !important;
   margin-right: 20% !important;
@@ -34,10 +50,15 @@
   display: none;
 }
 
+.generation-settings label {
+  display: block;
+  margin-top: 1rem;
+}
+
 .stop-generation {
-  position: absolute; 
-  top: -80px; 
-  left: 50%; 
+  position: absolute;
+  top: -80px;
+  left: 50%;
   transform: translateX(-50%);
   background-color: var(--surface-0);
   &:hover {
@@ -78,10 +99,6 @@
   justify-content: center;
   display: flex;
 }
-
-//.hidden {
-//  display: none !important;
-//}
 
 @media (min-width: 767px) {
   .user-message,

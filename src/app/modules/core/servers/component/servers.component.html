@@ -138,8 +138,14 @@
         <ng-template pTemplate="rowexpansion" let-server>
           <tr>
             <td colspan="6" class="server-details">
-              <div class="flex justify-content-between">
-                <div class="card">
+              <div
+                class="flex"
+                [ngClass]="{
+                  'justify-content-between': server.gpu_ram_total,
+                  'justify-content-around': !server.gpu_ram_total
+                }"
+              >
+                <div class="card" *ngIf="server.gpu_ram_total">
                   <h5 class="text-center w-full">GPU RAM</h5>
                   <p-knob
                     [step]="1"
@@ -176,11 +182,12 @@
                   ></p-knob>
                 </div>
               </div>
-              <h5>GPU Details</h5>
+              <h5 *ngIf="server.gpu.length">GPU Details</h5>
               <p-table
                 [value]="server.gpu"
                 dataKey="name"
                 responsiveLayout="scroll"
+                *ngIf="server.gpu.length"
               >
                 <ng-template pTemplate="header">
                   <tr>

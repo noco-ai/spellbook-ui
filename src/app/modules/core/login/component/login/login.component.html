@@ -1,0 +1,80 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1600 800"
+  class="fixed left-0 top-0 min-h-screen min-w-screen"
+  preserveAspectRatio="none"
+>
+  <rect
+    [attr.fill]="dark ? 'var(--primary-900)' : 'var(--primary-500)'"
+    width="1600"
+    height="800"
+  />
+  <path
+    [attr.fill]="dark ? 'var(--primary-800)' : 'var(--primary-400)'"
+    d="M478.4 581c3.2 0.8 6.4 1.7 9.5 2.5c196.2 52.5 388.7 133.5 593.5 176.6c174.2 36.6 349.5 29.2 518.6-10.2V0H0v574.9c52.3-17.6 106.5-27.7 161.1-30.9C268.4 537.4 375.7 554.2 478.4 581z"
+  />
+</svg>
+<div class="px-5 flex justify-content-center align-items-center login-form">
+  <p-toast></p-toast>
+  <div
+    class="border-1 surface-border surface-card border-round py-7 px-4 md:px-7 z-1"
+  >
+    <div class="mb-4">
+      <div class="text-900 text-xl font-bold mb-2">Log in</div>
+      <span class="text-600 font-medium">Please enter your details</span>
+    </div>
+    <div class="flex flex-column">
+      <span class="p-input-icon-left w-full mb-4">
+        <i class="pi pi-user"></i>
+        <input
+          [(ngModel)]="username"
+          id="email"
+          type="text"
+          pInputText
+          class="w-full md:w-25rem"
+          placeholder="Username"
+          (keydown)="handleKeydown($event)"
+        />
+      </span>
+      <span class="p-input-icon-left w-full mb-4">
+        <i class="pi pi-lock"></i>
+        <input
+          [(ngModel)]="password"
+          id="password"
+          type="password"
+          pInputText
+          class="w-full md:w-25rem"
+          placeholder="Password"
+          (keydown)="handleKeydown($event)"
+        />
+      </span>
+      <!--<div class="mb-4 flex flex-wrap gap-3">
+        <div>
+          <p-checkbox
+            name="checkbox"
+            value="val"
+            [(ngModel)]="rememberMe"
+            styleClass="mr-2"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="checkbox" class="text-900 font-medium mr-8"
+            >Remember Me</label
+          >
+        </div>
+        <a
+          class="text-600 cursor-pointer hover:text-primary cursor-pointer ml-auto transition-colors transition-duration-300"
+          >Reset password</a
+        >
+      </div>-->
+      <button
+        pButton
+        pRipple
+        label="Log In"
+        class="w-full"
+        (click)="login()"
+      ></button>
+    </div>
+  </div>
+</div>
+
+<!--<app-config [minimal]="true"></app-config>-->

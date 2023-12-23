@@ -1,0 +1,180 @@
+<div class="grid formgrid">
+  <div class="col-12">
+    <textarea
+      style="min-height: 400px"
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      pInputTextarea
+      [(ngModel)]="completion"
+      [rows]="calculateRows(completion)"
+      [disabled]="isGenerating"
+    ></textarea>
+  </div>
+  <div class="col-12 lg:col-6 xl:col-6">
+    <p-accordion class="mt-4" style="display: block">
+      <p-accordionTab header="Generation Settings" [selected]="false">
+        <div class="grid formgrid">
+          <div class="col-4">
+            <label class="mt-4">Temperature</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="temperature"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="temperature"
+              [min]="0.01"
+              [max]="2"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4">
+            <label class="mt-4">Top K</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="topK"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="topK"
+              [min]="1"
+              [max]="256"
+              [step]="1"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4">
+            <label>Min P</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="minP"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="minP"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4 mt-3">
+            <label>Seed</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="seed"
+            />
+          </div>
+          <div class="col-4 mt-3">
+            <label>Mirostat</label>
+            <p-dropdown
+              class="selectinput w-full mr-4 mt-1"
+              [options]="mirostatOptions"
+              [(ngModel)]="mirostat"
+            ></p-dropdown>
+          </div>
+          <div class="col-4 mt-3">
+            <label>Top P</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="topP"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="topP"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4 mt-3" *ngIf="mirostat != 0"></div>
+          <div class="col-4 mt-3" *ngIf="mirostat != 0">
+            <label>Mirostat ETA</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="mirostatEta"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="mirostatEta"
+              [min]="0.01"
+              [max]="1"
+              [step]="0.01"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-4 mt-3" *ngIf="mirostat != 0">
+            <label>Mirostat TAU</label>
+            <input
+              class="p-inputtext p-component p-element w-full mt-1"
+              type="text"
+              pInputText
+              [(ngModel)]="mirostatTau"
+              [disabled]="true"
+            />
+            <p-slider
+              [(ngModel)]="mirostatTau"
+              [min]="0.1"
+              [max]="10"
+              [step]="0.1"
+              class="w-full"
+            ></p-slider>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+  <div class="col-4 mt-4 lg:col-2 xl:col-2">
+    <div style="width: 200px; display: inline-block">
+      <input
+        class="p-inputtext p-component p-element w-full"
+        type="text"
+        pInputText
+        [(ngModel)]="maxNewTokens"
+        [disabled]="true"
+        pTooltip="Maximum new tokens to generate"
+      />
+      <p-slider
+        [(ngModel)]="maxNewTokens"
+        [min]="32"
+        [max]="16384"
+        [step]="1"
+        class="w-full"
+      ></p-slider>
+    </div>
+  </div>
+  <div class="col-8 lg:col-4 xl:col-4 flex justify-content-between mt-4">
+    <div></div>
+    <div>
+      <p-dropdown
+        class="w-full mr-3"
+        [options]="modelOptions"
+        [(ngModel)]="selectedModel"
+        placeholder="Test Model"
+      ></p-dropdown>
+      <button
+        [disabled]="!completion.length || !selectedModel"
+        pButton
+        type="button"
+        icon="pi {{ isGenerating ? 'pi-stop' : 'pi-send' }}"
+        (click)="executeCompletion()"
+      >
+        &nbsp;{{ isGenerating ? "Stop" : "Generate" }}
+      </button>
+    </div>
+  </div>
+</div>

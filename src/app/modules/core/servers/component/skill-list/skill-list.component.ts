@@ -49,6 +49,27 @@ export class SkillList implements OnInit, OnDestroy, OnChanges {
     );
   }
 
+  private pruneExpandedList(server: any, expandList: expandedRows) {
+    const prunedList = JSON.parse(JSON.stringify(expandList));
+    const checkList =
+      this.listType == "available"
+        ? server.skill_groups
+        : server.skill_groups_installed;
+    for (const key in expandList) {
+      let foundKey = false;
+      for (let i = 0; i < checkList.length; i++) {
+        if (checkList[i].use == key) {
+          if (checkList[i].skills.length) {
+            foundKey = true;
+            break;
+          }
+        }
+      }
+      if (!foundKey) delete prunedList[key];
+    }
+    return prunedList;
+  }
+
   ngOnInit() {
     this.runSkillDeviceOptions = [];
   }
@@ -56,10 +77,12 @@ export class SkillList implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes["server"]) {
       const serverId = changes["server"].currentValue.server_id;
-      const storedExpanded = localStorage.getItem(
-        `${serverId}-expand-${this.listType}`
+      const storedExpanded =
+        localStorage.getItem(`${serverId}-expand-${this.listType}`) || "";
+      this.expandedUse = this.pruneExpandedList(
+        this.server,
+        JSON.parse(storedExpanded)
       );
-      if (storedExpanded) this.expandedUse = JSON.parse(storedExpanded);
     }
   }
 
