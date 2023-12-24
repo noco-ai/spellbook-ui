@@ -32,8 +32,12 @@ export class AssistantService {
     icon: "",
     is_private: true,
     is_shared: false,
-    top_k: 0.9,
+    top_k: 50,
     top_p: 0.9,
+    min_p: 0.05,
+    mirostat: 0,
+    mirostat_eta: 0.1,
+    mirostat_tau: 5,
     temperature: 1.0,
     system_message: null,
     use_model: null,
@@ -75,7 +79,7 @@ export class AssistantService {
     );
 
     this.socketService.subscribeToEvent(
-      "chat_progress_bar",
+      "progress_bar_update",
       (data: ProgressUpdate) => {
         this.progressBarUpdate.emit(data);
       }
@@ -96,10 +100,12 @@ export class AssistantService {
       this.updateIcons.emit(iconData);
     });
 
-    this.socketService.subscribeToEvent(
-      "online_language_models",
-      (models: ModelOptions[]) => {
-        this.onlineLanguageModels.emit(models);
+    this.socketService.subscribeToEventWithFilter(
+      "finish_command",
+      "command",
+      "get_online_language_models",
+      (resp: any) => {
+        this.onlineLanguageModels.emit(resp.models);
       }
     );
   }
@@ -123,7 +129,7 @@ export class AssistantService {
   }
 
   async getConversations() {
-    const query = `query { getConversation { id, topic, is_private, is_shared, created_at, updated_at, seed, top_p, top_k, seed, temperature, system_message, use_model, router_config } }`;
+    const query = `query { getConversation { id, topic, is_private, is_shared, created_at, updated_at, seed, top_p, top_k, min_p, mirostat, mirostat_eta, mirostat_tau, temperature, system_message, use_model, router_config } }`;
     this.graphqlService.sendQuery(query, {}).subscribe((data) => {
       const conversations: Conversation[] = data.data.getConversation;
       const list: Conversation[] = [];
@@ -144,6 +150,10 @@ export class AssistantService {
           system_message: conversation.system_message || "",
           top_k: conversation.top_k,
           top_p: conversation.top_p,
+          min_p: conversation.min_p,
+          mirostat: conversation.mirostat,
+          mirostat_eta: conversation.mirostat_eta,
+          mirostat_tau: conversation.mirostat_tau,
           use_model: conversation.use_model,
           router_config: routerConfig,
           icon: "",
@@ -173,7 +183,7 @@ export class AssistantService {
   }
 
   async updateConversation(conversation: Conversation) {
-    const query = `mutation Message($id: Int!, $topic: String!, $system_message: String!, $use_model: String!, $seed: Int!, $top_p: Float!, $top_k: Float!, $temperature: Float!, $router_config: String!) { updateConversation(id: $id, topic: $topic, system_message: $system_message, use_model: $use_model, seed: $seed, top_p: $top_p, top_k: $top_k, temperature: $temperature, router_config: $router_config ) { id } }`;
+    const query = `mutation Message($id: Int!, $topic: String!, $system_message: String!, $use_model: String!, $seed: Float!, $top_p: Float!, $top_k: Int!, $temperature: Float!, $router_config: String!, $min_p: Float!, $mirostat: Int!, $mirostat_eta: Float!, $mirostat_tau: Float!) { updateConversation(id: $id, topic: $topic, system_message: $system_message, use_model: $use_model, seed: $seed, top_p: $top_p, top_k: $top_k, temperature: $temperature, router_config: $router_config, mirostat: $mirostat, mirostat_tau: $mirostat_tau, mirostat_eta: $mirostat_eta, min_p: $min_p ) { id } }`;
     conversation.seed = parseInt("" + conversation.seed);
     const routerConfig = Array.isArray(conversation.router_config)
       ? conversation.router_config.join(",")
@@ -188,6 +198,10 @@ export class AssistantService {
         seed: conversation.seed,
         top_p: conversation.top_p,
         top_k: conversation.top_k,
+        min_p: conversation.min_p,
+        mirostat: conversation.mirostat,
+        mirostat_tau: conversation.mirostat_tau,
+        mirostat_eta: conversation.mirostat_eta,
         temperature: conversation.temperature,
         router_config: routerConfig,
       })
@@ -327,6 +341,10 @@ export class AssistantService {
     payload.top_p = this._activeConversation.top_p;
     payload.top_k = this._activeConversation.top_k;
     payload.seed = this._activeConversation.seed;
+    payload.min_p = this._activeConversation.min_p;
+    payload.mirostat = this._activeConversation.mirostat;
+    payload.mirostat_tau = this._activeConversation.mirostat_tau;
+    payload.mirostat_eta = this._activeConversation.mirostat_eta;
     payload.router_config = Array.isArray(
       this._activeConversation.router_config
     )

@@ -143,10 +143,12 @@ export class GolemComponent implements OnInit, OnDestroy {
 
         data.hd_summary = hdUsed + " / " + hdTotal;
         data.ram_summary = ramUsed + " / " + ramTotal;
-        data.gpu_summary = gpuSummary;
-        data.gpu_ram_used = parseFloat(
-          ((gpuUsed.raw / gpuTotal.raw) * 100).toPrecision(2)
-        );
+        data.gpu_summary = gpuTotal.value ? gpuSummary : "--";
+        data.gpu_ram_used = gpuUsed.raw
+          ? parseFloat(((gpuUsed.raw / gpuTotal.raw) * 100).toPrecision(2))
+          : 0;
+        data.gpu_ram_total = gpuTotal.value;
+
         //data.index = this.servers.length;
 
         const skillIndex = this.buildSkillIndex(data.installed_skills);

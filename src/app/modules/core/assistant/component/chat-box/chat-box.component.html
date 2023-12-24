@@ -17,74 +17,137 @@
       placeholder="Conversation Topic"
       #conversationTopic
     />
-    <label class="mt-4">Preferred Model</label>
+    <label class="mt-3">Preferred Model</label>
     <p-dropdown
       class="selectinput w-full"
       [options]="modelOptions"
       [(ngModel)]="conversation.use_model"
     ></p-dropdown>
-    <label class="mt-4">Router Settings</label>
+    <label class="mt-3">Router Settings</label>
     <p-multiSelect
       class="selectinput w-full"
       [options]="routerConfigOptions"
       [(ngModel)]="conversation.router_config"
     ></p-multiSelect>
-    <label class="mt-4">Top K</label>
-    <input
-      class="p-inputtext p-component p-element w-full"
-      type="text"
-      pInputText
-      [(ngModel)]="conversation.top_k"
-      [disabled]="true"
-    />
-    <p-slider
-      [min]="0"
-      [max]="1"
-      [step]="0.05"
-      [(ngModel)]="conversation.top_k"
-      class="w-full"
-    ></p-slider>
-    <label class="mt-4">Top P</label>
-    <input
-      class="p-inputtext p-component p-element w-full"
-      type="text"
-      pInputText
-      style="width: 100%"
-      [(ngModel)]="conversation.top_p"
-      [disabled]="true"
-    />
-    <p-slider
-      [min]="0"
-      [max]="1"
-      [step]="0.05"
-      [(ngModel)]="conversation.top_p"
-      class="w-full"
-    ></p-slider>
-    <label class="mt-4">Temperature</label>
-    <input
-      class="p-inputtext p-component p-element w-full"
-      type="text"
-      pInputText
-      style="width: 100%"
-      [(ngModel)]="conversation.temperature"
-      [disabled]="true"
-    />
-    <p-slider
-      [min]="0"
-      [max]="2"
-      [step]="0.05"
-      [(ngModel)]="conversation.temperature"
-      class="w-full"
-    ></p-slider>
-    <!--<label class="mt-4">Seed</label>
-    <input
-      class="p-inputtext p-component p-element w-full"
-      pInputText
-      style="width: 100%"
-      [(ngModel)]="conversation.seed"
-      [pKeyFilter]="'int'"
-    />-->
-    <label class="mt-4">System Message</label>
+    <p-accordion class="mt-4 w-full generation-settings" style="display: block">
+      <p-accordionTab
+        header="Generation Settings"
+        [(selected)]="showGenerationSettings"
+      >
+        <label class="mt-0">Top K</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          [(ngModel)]="conversation.top_k"
+          [disabled]="true"
+        />
+        <p-slider
+          [min]="1"
+          [max]="256"
+          [step]="1"
+          [(ngModel)]="conversation.top_k"
+          class="w-full"
+        ></p-slider>
+        <label>Top P</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          style="width: 100%"
+          [(ngModel)]="conversation.top_p"
+          [disabled]="true"
+        />
+        <p-slider
+          [min]="0"
+          [max]="1"
+          [step]="0.01"
+          [(ngModel)]="conversation.top_p"
+          class="w-full"
+        ></p-slider>
+        <label>Min P</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          style="width: 100%"
+          [(ngModel)]="conversation.min_p"
+          [disabled]="true"
+        />
+        <p-slider
+          [min]="0"
+          [max]="1"
+          [step]="0.01"
+          [(ngModel)]="conversation.min_p"
+          class="w-full"
+        ></p-slider>
+        <label>Temperature</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          style="width: 100%"
+          [(ngModel)]="conversation.temperature"
+          [disabled]="true"
+        />
+        <p-slider
+          [min]="0"
+          [max]="2"
+          [step]="0.01"
+          [(ngModel)]="conversation.temperature"
+          class="w-full"
+        ></p-slider>
+        <label>Mirostat</label>
+        <p-dropdown
+          class="selectinput w-full"
+          [options]="mirostatOptions"
+          [(ngModel)]="conversation.mirostat"
+        ></p-dropdown>
+        <div class="m-0 p-0 mt-2 w-full" *ngIf="conversation.mirostat">
+          <label>Mirostat Tau</label>
+          <input
+            class="p-inputtext p-component p-element w-full"
+            type="text"
+            pInputText
+            [(ngModel)]="conversation.mirostat_tau"
+            [disabled]="true"
+          />
+          <p-slider
+            [min]="0"
+            [max]="10"
+            [step]="1"
+            [(ngModel)]="conversation.mirostat_tau"
+            class="w-full"
+          ></p-slider>
+        </div>
+        <div class="m-0 p-0 w-full" *ngIf="conversation.mirostat">
+          <label>Mirostat Eta</label>
+          <input
+            class="p-inputtext p-component p-element w-full"
+            type="text"
+            pInputText
+            [(ngModel)]="conversation.mirostat_eta"
+            [disabled]="true"
+          />
+          <p-slider
+            [min]="0"
+            [max]="10"
+            [step]="0.01"
+            [(ngModel)]="conversation.mirostat_eta"
+            class="w-full"
+          ></p-slider>
+        </div>
+        <label>Seed</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          pInputText
+          style="width: 100%"
+          [(ngModel)]="conversation.seed"
+          [pKeyFilter]="'int'"
+        />
+      </p-accordionTab>
+    </p-accordion>
+    <label class="mt-3">System Message</label>
     <textarea
       rows="5"
       cols="30"

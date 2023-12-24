@@ -24,6 +24,7 @@ import { MultiSelectModule } from "primeng/multiselect";
 import { UploadedFilesComponent } from "./component/uploaded-files/uploaded-files.component";
 import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
+import { AccordionModule } from "primeng/accordion";
 
 @NgModule({
   imports: [
@@ -46,6 +47,7 @@ import { MessageService } from "primeng/api";
     SliderModule,
     KeyFilterModule,
     ToastModule,
+    AccordionModule,
   ],
   declarations: [
     ChatSidebarComponent,

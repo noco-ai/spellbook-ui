@@ -7,6 +7,7 @@ export interface Server {
   ram_summary: string;
   gpu_summary: string;
   gpu_ram_used: number;
+  gpu_ram_total: number;
   index: number;
   handlers: {
     label: string;

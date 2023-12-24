@@ -1,6 +1,7 @@
 import { Injectable, EventEmitter } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { io, Socket } from "socket.io-client";
+import { Router } from "@angular/router";
 import { environment } from "../../../environments/environment";
 
 interface FilterDetail {
@@ -13,13 +14,21 @@ interface FilterDetail {
 })
 export class SocketService {
   private socket: Socket;
+  private token?: string;
   public onConnect: EventEmitter<any> = new EventEmitter<any>();
   public onDisconnect: EventEmitter<any> = new EventEmitter<any>();
   public onToastMessage: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor(private http: HttpClient) {
-    this.socket = io(this.getBaseUrl());
-    this.socket.on("connect", () => this.onConnect.emit());
+  constructor(private http: HttpClient, private router: Router) {
+    this.socket = io(this.getBaseUrl(), {
+      extraHeaders: {
+        authorization: `${this.getToken()}`,
+      },
+    });
+    this.socket.on("connect", () => {
+      this.onConnect.emit();
+    });
+    this.socket.on("auth_redirect", () => this.router.navigate(["/login"]));
     this.socket.on("disconnect", () => this.onDisconnect.emit());
     this.socket.on("toast_message", (data) => this.onToastMessage.emit(data));
   }
@@ -28,10 +37,23 @@ export class SocketService {
     return environment.apiUrl;
   }
 
+  getSocketId(): string {
+    return this.socket.id;
+  }
+
+  reconnect(): void {
+    this.socket.disconnect();
+    this.socket.connect();
+  }
+
   uploadFile(files: any, conversationId: number, callback: any = null) {
     if (files && files[0]) {
       const formData = new FormData();
       formData.append("file", files[0]);
+      const headers = new HttpHeaders({
+        Authorization: this.getToken(),
+      });
+
       this.http
         .post(
           this.getBaseUrl() +
@@ -39,7 +61,8 @@ export class SocketService {
             encodeURI(this.socket.id) +
             "&conversation_id=" +
             encodeURI("" + conversationId),
-          formData
+          formData,
+          { headers }
         )
         .subscribe((response) => {
           if (callback) {
@@ -86,6 +109,16 @@ export class SocketService {
         this.eventEmitters[eventName].emit(data);
       }
     });
+  }
+
+  getToken(): string {
+    if (!this.token) {
+      this.token =
+        typeof localStorage.getItem("auth_token") == "string"
+          ? `Bearer ${localStorage.getItem("auth_token")}`
+          : "";
+    }
+    return this.token;
   }
 
   subscribeToEventWithFilter(
@@ -136,6 +169,10 @@ export class SocketService {
   }
 
   send(event: string, data: any) {
-    this.socket.emit(event, data);
+    this.socket.emit(event, data, {
+      extraHeaders: {
+        authorization: this.getToken(),
+      },
+    });
   }
 }

@@ -1,0 +1,212 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<div *ngIf="!editingGroup" class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-users"
+      class="p-button flex-shrink-0 p-button-outlined"
+      (click)="addGroup()"
+    >
+      &nbsp;Add Group
+    </button>
+  </div>
+</div>
+<div *ngIf="editingGroup" class="m-0">
+  <p-fieldset legend="Group Details" [toggleable]="false" class="m-0 w-full">
+    <div class="grid">
+      <div class="col-4">
+        <label>Group Name</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          [(ngModel)]="currentGroup.name"
+        />
+      </div>
+      <div class="col-8">
+        <label>Description</label>
+        <input
+          class="p-inputtext p-component p-element w-full"
+          type="text"
+          pInputText
+          [(ngModel)]="currentGroup.description"
+        />
+      </div>
+    </div>
+  </p-fieldset>
+  <div class="mb-5"></div>
+  <p-fieldset
+    legend="Applications"
+    [toggleable]="true"
+    class="m-0 w-full"
+    style="position: relative"
+  >
+    <div style="position: absolute; right: 0px; top: 0px">
+      <a
+        href="#select-all"
+        (click)="selectAll($event, currentGroup, 'applications')"
+        class="ml-r"
+        >Select All</a
+      >&nbsp;&nbsp;
+      <a
+        href="#unselect-all"
+        (click)="unselectAll($event, currentGroup, 'applications')"
+        >Unselect All</a
+      >
+    </div>
+    <div
+      *ngFor="let app of installedApps"
+      class="mr-3 mb-3"
+      style="float: left"
+    >
+      <p-checkbox
+        value="{{ app.value }}"
+        id="{{ app.value }}"
+        class="mr-2"
+        [(ngModel)]="currentGroup.applications"
+      ></p-checkbox>
+      <label style="text-wrap: nowrap" for="{{ app.value }}">{{
+        app.label
+      }}</label>
+    </div>
+  </p-fieldset>
+  <div class="mb-5"></div>
+  <p-fieldset
+    legend="Chat Abilities"
+    [toggleable]="true"
+    class="m-0 w-full mb-4"
+    style="position: relative"
+  >
+    <div style="position: absolute; right: 0px; top: 0px">
+      <a
+        href="#select-all"
+        (click)="selectAll($event, currentGroup, 'chat_abilities')"
+        class="ml-r"
+        >Select All</a
+      >&nbsp;&nbsp;
+      <a
+        href="#unselect-all"
+        (click)="unselectAll($event, currentGroup, 'chat_abilities')"
+        >Unselect All</a
+      >
+    </div>
+    <div
+      *ngFor="let ability of installedChatAbilities"
+      class="mr-3 mb-3"
+      style="float: left"
+    >
+      <p-checkbox
+        value="{{ ability.value }}"
+        id="{{ ability.value }}"
+        class="mr-2"
+        [(ngModel)]="currentGroup.chat_abilities"
+      ></p-checkbox>
+      <label style="text-wrap: nowrap" [for]="ability.value">{{
+        ability.label
+      }}</label>
+    </div>
+  </p-fieldset>
+  <div class="mb-5"></div>
+  <p-fieldset
+    legend="Skills"
+    [toggleable]="true"
+    class="m-0 w-full mb-4"
+    style="position: relative"
+  >
+    <div style="position: absolute; right: 0px; top: 0px">
+      <a
+        href="#select-all"
+        (click)="selectAll($event, currentGroup, 'skills')"
+        class="ml-r"
+        >Select All</a
+      >&nbsp;&nbsp;
+      <a
+        href="#unselect-all"
+        (click)="unselectAll($event, currentGroup, 'skills')"
+        >Unselect All</a
+      >
+    </div>
+    <div
+      *ngFor="let skill of installedSkills"
+      class="mr-3 mb-3"
+      style="float: left"
+    >
+      <p-checkbox
+        value="{{ skill.value }}"
+        [(ngModel)]="currentGroup.skills"
+        id="{{ skill.value }}"
+        class="mr-2"
+      ></p-checkbox>
+      <label style="text-wrap: nowrap" for="{{ skill.value }}">{{
+        skill.label
+      }}</label>
+    </div>
+  </p-fieldset>
+  <div class="col-12 flex justify-content-between">
+    <div></div>
+    <div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-ban"
+        class="p-button-secondary flex-shrink-0 p-button-outlined mr-2"
+        (click)="cancelEditGroup()"
+      >
+        &nbsp;Cancel
+      </button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-save"
+        class="p-button flex-shrink-0"
+        (click)="saveGroup(currentGroup)"
+        [disabled]="currentGroup.name.length < 4"
+      >
+        &nbsp;{{ currentGroup.unique_key ? "Save" : "Create" }}
+      </button>
+    </div>
+  </div>
+</div>
+<p-table
+  *ngIf="!editingGroup"
+  dataKey="unique_key"
+  responsiveLayout="scroll"
+  [value]="userGroups"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="name">
+        Group Name
+        <p-sortIcon field="name"></p-sortIcon>
+      </th>
+      <th pSortableColumn="description">
+        Description
+        <p-sortIcon field="description"></p-sortIcon>
+      </th>
+      <th style="width: 125px"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-group>
+    <tr>
+      <td>{{ group.name }}</td>
+      <td>{{ group.description }}</td>
+      <td>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button-secondary flex-shrink-0 p-button-icon-only p-button-outlined mr-2"
+          (click)="deleteGroup(group.unique_key)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-user-edit"
+          class="p-button-secondary flex-shrink-0 p-button-icon-only p-button-outlined"
+          (click)="editGroup(group)"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

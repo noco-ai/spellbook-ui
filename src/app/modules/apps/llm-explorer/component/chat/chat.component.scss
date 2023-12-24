@@ -1,0 +1,11 @@
+:host ::ng-deep .selectinput {
+  display: block;
+}
+
+:host ::ng-deep .selectinput .p-dropdown {
+  width: 100%;
+}
+
+:host ::ng-deep .models-select .p-multiselect-label-container {
+  max-width: 200px;
+}

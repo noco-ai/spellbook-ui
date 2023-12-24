@@ -42,6 +42,7 @@ export class ChatBoxComponent
   private messageSubscription!: Subscription;
   private cursorSubscription!: Subscription;
 
+  showGenerationSettings: boolean = false;
   canEdit: boolean = true;
   canStopGeneration: boolean = false;
   message!: Message;
@@ -74,6 +75,21 @@ export class ChatBoxComponent
     {
       label: "Pin Manually Selected Models",
       value: "pin_models",
+    },
+  ];
+
+  mirostatOptions = [
+    {
+      value: 0,
+      label: "Off",
+    },
+    {
+      value: 1,
+      label: "v1",
+    },
+    {
+      value: 2,
+      label: "v2",
     },
   ];
 
@@ -354,6 +370,7 @@ export class ChatBoxComponent
   }
 
   editConversation(conversation: Conversation) {
+    this.showGenerationSettings = false;
     this.showEditConversationDialog = true;
   }
 
