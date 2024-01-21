@@ -238,9 +238,11 @@ export class ImageGeneratorComponent implements OnInit, OnDestroy {
     for (let i = 0; i < numPlaceHolders; i++) {
       images.push({
         itemImageSrc:
-          "https://chat-api.magegpt.com/asset/app/image-generator/placeholder.png",
+          this.imageService.getBaseUrl() +
+          "asset/app/image-generator/placeholder.png",
         thumbnailImageSrc:
-          "https://chat-api.magegpt.com/asset/app/image-generator/placeholder-thumb.png",
+          this.imageService.getBaseUrl() +
+          "asset/app/image-generator/placeholder-thumb.png",
       });
     }
   }
