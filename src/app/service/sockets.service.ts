@@ -46,29 +46,43 @@ export class SocketService {
     this.socket.connect();
   }
 
-  uploadFile(files: any, conversationId: number, callback: any = null) {
+  uploadFile(
+    files: any,
+    url: string,
+    conversationId: number,
+    path: string = "",
+    callback: any = null
+  ) {
     if (files && files[0]) {
       const formData = new FormData();
       formData.append("file", files[0]);
       const headers = new HttpHeaders({
         Authorization: this.getToken(),
       });
-
-      this.http
-        .post(
-          this.getBaseUrl() +
-            "upload/workspace?socket_id=" +
-            encodeURI(this.socket.id) +
-            "&conversation_id=" +
-            encodeURI("" + conversationId),
-          formData,
-          { headers }
-        )
-        .subscribe((response) => {
+      const postUrl =
+        this.getBaseUrl() +
+        url +
+        "?socket_id=" +
+        encodeURI(this.socket.id) +
+        "&conversation_id=" +
+        encodeURI("" + conversationId) +
+        "&path=" +
+        encodeURI(path);
+      this.http.post(postUrl, formData, { headers }).subscribe(
+        (response) => {
           if (callback) {
             callback(response);
           }
-        });
+        },
+        (error) => {
+          if (callback) callback(null, error);
+          this.onToastMessage.emit({
+            summary: `Error uploading file`,
+            detail: error.error.message,
+            severity: "error",
+          });
+        }
+      );
     }
   }
 

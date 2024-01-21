@@ -1,0 +1,81 @@
+<p-dialog
+  header="Artwork Settings"
+  [(visible)]="visible"
+  [modal]="true"
+  (onHide)="onDialogHide()"
+  (onShow)="onShowDialog()"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-3 pr-4">
+    <label class="mt-3">Generation Model</label>
+    <p-dropdown
+      class="selectinput w-full"
+      [options]="modelOptions"
+      [(ngModel)]="selectedModel"
+    ></p-dropdown>
+    <label *ngIf="!regenerate.length" class="mt-3">Image Style</label>
+    <p-dropdown
+      *ngIf="!regenerate.length"
+      class="selectinput w-full"
+      [options]="styleOptions"
+      [(ngModel)]="artStyle"
+    ></p-dropdown>
+    <label class="mt-3">Guidance Scale</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="guidanceScale"
+      [disabled]="true"
+    />
+    <p-slider
+      [min]="1"
+      [max]="15"
+      [step]="0.1"
+      [(ngModel)]="guidanceScale"
+      class="w-full"
+    ></p-slider>
+    <label class="mt-3">Steps</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="steps"
+      [disabled]="true"
+    />
+    <p-slider
+      [min]="1"
+      [max]="80"
+      [(ngModel)]="steps"
+      class="w-full"
+    ></p-slider>
+    <label *ngIf="!regenerate.length" class="mt-3">Artist Style</label>
+    <input
+      *ngIf="!regenerate.length"
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="artist"
+    />
+    <label *ngIf="regenerate.length" class="mt-3">Prompt</label>
+    <textarea
+      *ngIf="regenerate.length"
+      rows="8"
+      tabindex="6"
+      class="p-inputtext p-component p-element w-full"
+      pInputTextArea
+      [(ngModel)]="regeneratePrompt"
+    ></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-image"
+      (click)="submitGenerateArtwork(book)"
+      [label]="regenerate.length ? 'Regenerate' : 'Generate'"
+      class="p-button-outlined"
+    ></button>
+  </ng-template>
+</p-dialog>

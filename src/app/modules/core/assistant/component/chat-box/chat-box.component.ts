@@ -21,6 +21,8 @@ import { ConfirmationService, MessageService } from "primeng/api";
 import emojiRegex from "emoji-regex";
 import { ModelOptions } from "../../api/model-options";
 import { SocketService } from "src/app/service/sockets.service";
+import { SoundService } from "src/app/service/sound.service";
+import RecordPlugin from "wavesurfer.js/dist/plugins/record";
 
 @Component({
   selector: "app-chat-box",
@@ -41,7 +43,11 @@ export class ChatBoxComponent
   private progressBarSubscription!: Subscription;
   private messageSubscription!: Subscription;
   private cursorSubscription!: Subscription;
+  private asrModelsSubscription!: Subscription;
+  private ttsModelsSubscription!: Subscription;
+  private asrSubscription!: Subscription;
 
+  asrModels: ModelOptions[] = [];
   showGenerationSettings: boolean = false;
   canEdit: boolean = true;
   canStopGeneration: boolean = false;
@@ -78,20 +84,7 @@ export class ChatBoxComponent
     },
   ];
 
-  mirostatOptions = [
-    {
-      value: 0,
-      label: "Off",
-    },
-    {
-      value: 1,
-      label: "v1",
-    },
-    {
-      value: 2,
-      label: "v2",
-    },
-  ];
+  mirostatOptions = this.chatService.getMirostatOptions();
 
   @Input() conversation!: Conversation;
   @Input() maxHeight: string = "150px";
@@ -103,7 +96,8 @@ export class ChatBoxComponent
     private sanitizer: DomSanitizer,
     private confirmationService: ConfirmationService,
     private socketService: SocketService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private soundService: SoundService
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {
@@ -112,7 +106,56 @@ export class ChatBoxComponent
     }
   }
 
-  ngOnInit(): void {
+  record?: any;
+  wavesurfer?: any;
+  isRecording: boolean = false;
+  async startRecord() {
+    if (this.isRecording) {
+      this.record.stopMic();
+      this.record.stopRecording();
+      this.isRecording = false;
+      return;
+    }
+
+    RecordPlugin.getAvailableAudioDevices().then((devices) => {
+      devices.forEach((device) => {
+        console.log(device);
+      });
+    });
+
+    this.isRecording = true;
+    await this.soundService.startRecording(this.record);
+  }
+
+  async ngOnInit(): Promise<void> {
+    this.baseIconUrl = this.chatService.getSocketUrl();
+
+    const instance = await this.soundService.createWavesurferRecordingInstance(
+      "#chatrecord",
+      132
+    );
+    console.log(instance);
+    this.record = instance.record;
+    this.wavesurfer = instance.wavesurfer;
+
+    this.record.on("record-end", async (blob: any) => {
+      const recordedUrl = URL.createObjectURL(blob);
+      const fileType = blob.type.split(";")[0].split("/")[1] || "webm";
+      fetch(recordedUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          this.soundService.sendAsrToServer(blob, fileType);
+        });
+    });
+
+    this.asrSubscription = this.soundService.asrProcessingFinished.subscribe(
+      (data) => {
+        if (this.textarea) this.textarea.nativeElement.innerHTML = data.text;
+        this.sendMessage();
+        this.isRecording = false;
+      }
+    );
+
     // @ts-ignore
     hljs.configure({ ignoreUnescapedHTML: true });
 
@@ -136,6 +179,18 @@ export class ChatBoxComponent
           this.modelOptions = models;
         }
       );
+
+    // get other online skills related to chat
+    this.asrModelsSubscription = this.chatService.asrModelList.subscribe(
+      (modelList: ModelOptions[]) => (this.asrModels = modelList || [])
+    );
+
+    this.ttsModelsSubscription = this.chatService.ttsModelList.subscribe(
+      (modelList: ModelOptions) => {
+        console.log(modelList);
+      }
+    );
+    this.chatService.getOnlineSkills();
 
     this.progressBarSubscription = this.chatService.progressBarUpdate.subscribe(
       (data) => {
@@ -164,7 +219,6 @@ export class ChatBoxComponent
       }
     );
 
-    this.baseIconUrl = this.chatService.getSocketUrl();
     this.setMessage();
     this.messageSubscription = this.chatService.incomingMessage.subscribe(
       (message) => {
@@ -207,6 +261,8 @@ export class ChatBoxComponent
         this.canEdit = true;
         this.progressVisible = false;
         this.cursorInUse = false;
+        this.progressValue = 0;
+        this.lastProgressPercent = 0;
       }
     );
 
@@ -288,6 +344,11 @@ export class ChatBoxComponent
     this.messageSubscription.unsubscribe();
     this.cursorSubscription.unsubscribe();
     this.toastUpdates.unsubscribe();
+    this.asrModelsSubscription.unsubscribe();
+    this.ttsModelsSubscription.unsubscribe();
+    this.asrSubscription.unsubscribe();
+    this.record.destroy();
+    this.wavesurfer.destroy();
   }
 
   onDragOver(event: Event) {

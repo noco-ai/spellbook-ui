@@ -1,0 +1,14 @@
+.text-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 132px;
+}
+
+:host ::ng-deep .selectinput .p-multiselect-label-container {
+  max-width: 200px;
+}
+
+:host ::ng-deep .selectinput .p-dropdown-label {
+  max-width: 150px;
+}

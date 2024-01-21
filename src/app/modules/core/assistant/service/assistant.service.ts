@@ -9,11 +9,15 @@ import { ProgressUpdate } from "../api/progress-update";
 import { SocketService } from "src/app/service/sockets.service";
 import { GraphqlService } from "src/app/service/graphql.service";
 import { marked } from "marked";
+import { LibraryBookAnalysis } from "src/app/modules/apps/library/api/library-book-analysis";
+import { GeneratedImage } from "src/app/modules/apps/image-generator/api/generated-image";
+import { DigitalAlly } from "../api/digital-allies";
 
 @Injectable()
 export class AssistantService {
   progressBarUpdate: EventEmitter<ProgressUpdate> =
     new EventEmitter<ProgressUpdate>();
+  digitalAllies: EventEmitter<any> = new EventEmitter<any>();
   incomingMessage: EventEmitter<Message> = new EventEmitter<Message>();
   incomingFragment: EventEmitter<string> = new EventEmitter<string>();
   updateIcons: EventEmitter<string[]> = new EventEmitter<string[]>();
@@ -25,6 +29,15 @@ export class AssistantService {
     Conversation[]
   >();
   conversationMessages: EventEmitter<Message[]> = new EventEmitter<Message[]>();
+  ttsModelList: EventEmitter<ModelOptions[]> = new EventEmitter<
+    ModelOptions[]
+  >();
+  asrModelList: EventEmitter<ModelOptions[]> = new EventEmitter<
+    ModelOptions[]
+  >();
+  imageList: EventEmitter<GeneratedImage[]> = new EventEmitter<
+    GeneratedImage[]
+  >();
 
   emptyConversation: Conversation = {
     id: 0,
@@ -78,8 +91,10 @@ export class AssistantService {
       }
     );
 
-    this.socketService.subscribeToEvent(
+    this.socketService.subscribeToEventWithFilter(
       "progress_bar_update",
+      "target",
+      "chat_progress",
       (data: ProgressUpdate) => {
         this.progressBarUpdate.emit(data);
       }
@@ -108,12 +123,32 @@ export class AssistantService {
         this.onlineLanguageModels.emit(resp.models);
       }
     );
+
+    this.socketService.subscribeToEventWithFilter(
+      "finish_command",
+      "command",
+      "get_online_skills",
+      (resp) => {
+        const ttsList =
+          !resp.skills || !resp.skills["text_to_speech"]
+            ? []
+            : resp.skills["text_to_speech"];
+        const asrList =
+          !resp.skills || !resp.skills["automatic_speech_recognition"]
+            ? []
+            : resp.skills["automatic_speech_recognition"];
+        this.ttsModelList.emit(ttsList);
+        this.asrModelList.emit(asrList);
+      }
+    );
   }
 
   async uploadFile(files: any, callback: any = null) {
     this.socketService.uploadFile(
       files,
+      "upload/workspace",
       this._activeConversation.id,
+      "",
       (response: any) => {
         if (callback) {
           callback(response);
@@ -125,6 +160,12 @@ export class AssistantService {
   async getOnlineLanguageModels() {
     await this.socketService.send("command", {
       command: "get_online_language_models",
+    });
+  }
+
+  async getOnlineSkills() {
+    await this.socketService.send("command", {
+      command: "get_online_skills",
     });
   }
 
@@ -217,12 +258,16 @@ export class AssistantService {
       .subscribe((data) => {});
   }
 
+  getBaseUrl(): string {
+    return this.socketService.getBaseUrl();
+  }
+
   async getConversationMessages(conversationId: number) {
     const query = `query Message($id: Int!) { getConversationMessages(conversation_id: $id) { id, icon, shortcuts, content, role, conversation_id, parent_id, active_child_id, num_children, created_at, files } }`;
     this.graphqlService
       .sendQuery(query, { id: conversationId })
       .subscribe((data) => {
-        const messages = data.data.getConversationMessages;
+        const messages = data?.data?.getConversationMessages || [];
         const list: Message[] = [];
         for (let i = 0; i < messages.length; i++) {
           const message = messages[i];
@@ -361,5 +406,139 @@ export class AssistantService {
 
   getSocketUrl() {
     return this.socketService.getBaseUrl();
+  }
+
+  // MOVE TO ITS OWN SERVICE
+  /*async getDigitalAllies() {
+    const query = `query LibraryBookAnalysisByProcess($process: String!) { getLibraryBookAnalysisByProcess(process: $process) { id, result, created_at } }`;
+    this.graphqlService
+      .sendQuery(query, { process: "fiction_character_merge" })
+      .subscribe((data) => {
+        const ret = [];
+        const content: LibraryBookAnalysis[] =
+          data?.data?.getLibraryBookAnalysisByProcess || [];
+        for (let i = 0; i < content.length; i++) {
+          try {
+            const json = JSON.parse(content[i].result);
+            if (
+              !json.image ||
+              !json.personality_description ||
+              json.personality_description.length < 400
+            )
+              continue;
+            ret.push(json);
+          } catch (ex) {}
+        }
+        this.digitalAllies.emit(ret);
+      });
+  }*/
+
+  getImageUrl(imagePath: string) {
+    return this.socketService.getBaseUrl() + imagePath;
+  }
+
+  async getAvailableImages() {
+    const query = `query { getGeneratedImage { id, prompt, negative_prompt, seed, height, width, guidance_scale, steps, image_url, created_at, model_name } }`;
+    this.graphqlService.sendQuery(query, {}).subscribe((data) => {
+      const images: GeneratedImage[] = data.data.getGeneratedImage;
+      this.imageList.emit(images);
+    });
+  }
+
+  getMirostatOptions() {
+    return [
+      {
+        value: 0,
+        label: "Off",
+      },
+      {
+        value: 1,
+        label: "v1",
+      },
+      {
+        value: 2,
+        label: "v2",
+      },
+    ];
+  }
+
+  async getDigitalAllies() {
+    const query = `query { getDigitalAlly { id, user_id, system_message, use_model, seed, temperature, top_k, top_p, min_p, mirostat, mirostat_eta, mirostat_tau, router_config, created_at, updated_at, name, wake_words, chat_round_limits, voice, location_image, character_image, short_description, tag_line } }`;
+    this.graphqlService.sendQuery(query, {}).subscribe((data) => {
+      const digitalAllies: DigitalAlly[] = data.data.getDigitalAlly;
+      const list: DigitalAlly[] = [];
+      for (let i = 0; i < digitalAllies.length; i++) {
+        const ally = digitalAllies[i];
+        list.push({
+          id: ally.id,
+          user_id: ally.user_id,
+          system_message: ally.system_message || "",
+          use_model: ally.use_model,
+          seed: ally.seed,
+          temperature: ally.temperature,
+          top_k: ally.top_k,
+          top_p: ally.top_p,
+          min_p: ally.min_p,
+          mirostat: ally.mirostat,
+          mirostat_eta: ally.mirostat_eta,
+          mirostat_tau: ally.mirostat_tau,
+          router_config: ally.router_config,
+          created_at: ally.created_at,
+          updated_at: ally.updated_at,
+          name: ally.name,
+          wake_words: ally.wake_words,
+          chat_round_limits: ally.chat_round_limits,
+          voice: ally.voice,
+          location_image: ally.location_image,
+          character_image: ally.character_image,
+          short_description: ally.short_description,
+          tag_line: ally.tag_line,
+        });
+      }
+      this.digitalAllies.emit(list);
+    });
+  }
+
+  async deleteDigitalAlly(digitalAllyId: number) {
+    const query = `mutation Message($id: Int!) { deleteDigitalAlly(id: $id) { id } }`;
+    this.graphqlService
+      .sendQuery(query, { id: digitalAllyId })
+      .subscribe((data) => {});
+  }
+
+  async updateDigitalAlly(digitalAlly: DigitalAlly) {
+    // Update the mutation with new fields
+    const query = `mutation Message($id: Int!, $user_id: Int!, $system_message: String, $use_model: String, $seed: Float, $top_p: Float, $top_k: Int, $temperature: Float, $router_config: String, $min_p: Float, $mirostat: Int, $mirostat_eta: Float, $mirostat_tau: Float, $name: String, $wake_words: String, $chat_round_limits: Int, $voice: String, $location_image: String, $character_image: String, $short_description: String, $tag_line: String) { updateDigitalAlly(id: $id, user_id: $user_id, system_message: $system_message, use_model: $use_model, seed: $seed, top_p: $top_p, top_k: $top_k, temperature: $temperature, router_config: $router_config, min_p: $min_p, mirostat: $mirostat, mirostat_eta: $mirostat_eta, mirostat_tau: $mirostat_tau, name: $name, wake_words: $wake_words, chat_round_limits: $chat_round_limits, voice: $voice, location_image: $location_image, character_image: $character_image, short_description: $short_description, tag_line: $tag_line) { id } }`;
+
+    // Convert seed to a number if necessary and handle any other data transformations
+    digitalAlly.seed = parseFloat("" + digitalAlly.seed);
+
+    this.graphqlService
+      .sendQuery(query, {
+        id: digitalAlly.id,
+        user_id: digitalAlly.user_id,
+        system_message: digitalAlly.system_message,
+        use_model: digitalAlly.use_model,
+        seed: digitalAlly.seed,
+        top_p: digitalAlly.top_p,
+        top_k: digitalAlly.top_k,
+        temperature: digitalAlly.temperature,
+        router_config: digitalAlly.router_config,
+        min_p: digitalAlly.min_p,
+        mirostat: digitalAlly.mirostat,
+        mirostat_eta: digitalAlly.mirostat_eta,
+        mirostat_tau: digitalAlly.mirostat_tau,
+        name: digitalAlly.name,
+        wake_words: digitalAlly.wake_words,
+        chat_round_limits: digitalAlly.chat_round_limits,
+        voice: digitalAlly.voice,
+        location_image: digitalAlly.location_image,
+        character_image: digitalAlly.character_image,
+        short_description: digitalAlly.short_description,
+        tag_line: digitalAlly.tag_line,
+      })
+      .subscribe((data) => {
+        this.getDigitalAllies();
+      });
   }
 }

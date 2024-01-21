@@ -170,8 +170,8 @@ export class ImageGeneratorComponent implements OnInit, OnDestroy {
 
     this.progressSubscription = this.imageService.progressBarUpdate.subscribe(
       (progressUpdate: ProgressUpdate) => {
-        if (this.stepCounts.has(progressUpdate.label)) {
-          this.stepCounts.set(progressUpdate.label, progressUpdate.total);
+        if (this.stepCounts.has(progressUpdate.model)) {
+          this.stepCounts.set(progressUpdate.model, progressUpdate.total);
         }
 
         let totalSteps = 0;

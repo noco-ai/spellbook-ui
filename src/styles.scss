@@ -76,3 +76,13 @@ body {
 .audio-card:hover div {
   display: block;
 }
+
+.map-container {
+  font-family: "Courier New", monospace;
+  white-space: pre; /* This ensures that whitespace is preserved */
+}
+.map-tile {
+  display: inline-block;
+  width: 20px; /* Adjust width as needed */
+  text-align: center;
+}

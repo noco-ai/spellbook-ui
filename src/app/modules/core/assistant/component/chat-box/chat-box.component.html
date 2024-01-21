@@ -405,6 +405,7 @@
   <div *ngIf="uploadedFiles.length" class="mt-6">
     <chat-uploaded-files [fileList]="uploadedFiles"></chat-uploaded-files>
   </div>
+
   <div
     style="position: relative"
     class="p-3 md:p-4 lg:p-6 flex flex-column sm:flex-row align-items-center mt-auto border-top-1 surface-border gap-3"
@@ -423,7 +424,14 @@
     ></button>
 
     <div
+      class="mr-8 ml-8 w-full"
+      id="chatrecord"
+      [ngStyle]="{ display: isRecording ? 'block' : 'none' }"
+    ></div>
+
+    <div
       #textarea
+      [ngStyle]="{ display: isRecording ? 'none' : 'block' }"
       [style.max-height]="maxHeight"
       (input)="adjustHeight($event)"
       (keydown)="handleKeyDown($event)"
@@ -432,12 +440,21 @@
       contenteditable="true"
     ></div>
 
-    <div class="flex w-full sm:w-auto gap-3">
+    <div class="flex w-full sm:w-auto">
+      <button
+        *ngIf="asrModels.length"
+        pButton
+        pRipple
+        icon="pi pi-microphone"
+        [disabled]="!canEdit || isRecording"
+        class="mr-2 p-button-secondary p-button-outlined"
+        (click)="startRecord()"
+      ></button>
       <button
         pButton
         pRipple
         label="Send"
-        [disabled]="!canEdit"
+        [disabled]="!canEdit || isRecording"
         icon="pi pi-send"
         class="w-full sm:w-auto"
         (click)="sendMessage()"

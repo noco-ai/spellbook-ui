@@ -1,0 +1,37 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-toast></p-toast>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="aiAnalysisRunning">
+  <p-progressBar
+    [value]="analysisProgressValue"
+    [showValue]="false"
+    [mode]="analysisProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Running
+    <a
+      style="color: var(--primary-color)"
+      href="#/library/analyze/{{ currentBook.id }}"
+      >AI Analysis</a
+    >
+    on {{ currentBook.title }}
+  </h6>
+</div>
+<h6 *ngIf="doneLoading && !jobsRunning && !summary.length" class="ml-3">
+  No question and answer sets have been extracted from the book. Run
+  <a
+    style="color: var(--primary-color)"
+    href="#/library/analyze/{{ currentBook.id }}"
+    >AI Analysis</a
+  >
+  with Q/A extraction.
+</h6>
+<div class="w-full mb-4 mt-4 grid flex">
+  <ng-container *ngFor="let item of summary">
+    <p-divider layout="horizontal" align="center" class="w-full">
+      <span class="p-tag mr-2">Book Chunk #{{ item.chunk }}</span>
+    </p-divider>
+    <div *ngIf="item.summary.length" class="col-12 pl-6 pr-6">
+      {{ item.summary }}
+    </div>
+  </ng-container>
+</div>

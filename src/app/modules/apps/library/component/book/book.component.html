@@ -1,0 +1,50 @@
+<div class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-search-minus"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      [disabled]="isDecreaseFontSizeDisabled()"
+      (click)="decreaseFontSize()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-search-plus"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      [disabled]="isIncreaseFontSizeDisabled()"
+      (click)="increaseFontSize()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-home"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="goToFirstPage()"
+    ></button>
+  </div>
+</div>
+<div id="epubViewer"></div>
+<div class="flex justify-content-between mb-4 w-full pl-6 pr-6">
+  <div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-chevron-left"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="prevPage()"
+    >
+      &nbsp;Previous Page
+    </button>
+  </div>
+  <button
+    pButton
+    type="button"
+    icon="pi pi-chevron-right"
+    class="p-button flex-shrink-0 p-button-outlined mr-2"
+    (click)="nextPage()"
+  >
+    &nbsp;Next Page
+  </button>
+</div>

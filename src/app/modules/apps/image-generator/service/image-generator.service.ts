@@ -45,8 +45,10 @@ export class ImageGeneratorService {
       }
     );
 
-    this.socketService.subscribeToEvent(
+    this.socketService.subscribeToEventWithFilter(
       "progress_bar_update",
+      "target",
+      "app_image_generator",
       (data: ProgressUpdate) => {
         this.progressBarUpdate.emit(data);
       }

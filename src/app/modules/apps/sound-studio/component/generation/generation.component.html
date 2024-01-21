@@ -1,0 +1,235 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+
+<div class="grid m-1 mb-8">
+  <div class="col-12 lg:col-6 xl:col-6 m-0 p-0">
+    <div class="col-12 m-0 p-0 lg:mt-1 xl:mt-1">
+      <label class="mt-4">Prompt</label>
+      <textarea
+        rows="5"
+        cols="30"
+        class="p-inputtext p-component p-element w-full mb-3"
+        pInputTextarea
+        [(ngModel)]="soundPrompt"
+        (keydown)="handlePromptKeydown($event)"
+      ></textarea>
+    </div>
+    <p-accordion *ngIf="type == 'tts'">
+      <p-accordionTab header="Advanced" [selected]="false">
+        <div class="grid">
+          <div class="col-6">
+            <label>Bark Voice</label>
+            <p-dropdown
+              class="selectinput"
+              [options]="barkVoiceOptions"
+              [(ngModel)]="useVoice"
+            ></p-dropdown>
+          </div>
+          <div class="col-6">
+            <label>xTTS Voice</label>
+            <p-dropdown
+              class="selectinput"
+              [options]="xttsOptions"
+              [(ngModel)]="xttsUseVoice"
+            ></p-dropdown>
+          </div>
+          <p class="w-full p-4 pb-0 pt-2 font-bold">
+            You can add new xTTS voices in by uploading or recording them in the
+            <a href="#/sound-studio/asr" style="color: var(--primary-color)"
+              >Speech Recognition</a
+            >
+            tab and assigning it a label.
+          </p>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <p-accordion *ngIf="type != 'tts'">
+      <p-accordionTab header="Advanced" [selected]="false">
+        <div class="grid">
+          <div class="col-6">
+            <label>Guidance Scale</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="guidanceScale"
+              [disabled]="true"
+            />
+            <p-slider
+              [min]="1"
+              [max]="7"
+              [(ngModel)]="guidanceScale"
+              class="w-full"
+            ></p-slider>
+          </div>
+          <div class="col-6">
+            <label>Length in Seconds</label>
+            <input
+              class="p-inputtext p-component p-element w-full"
+              type="text"
+              pInputText
+              [(ngModel)]="generateLength"
+              [disabled]="true"
+            />
+            <p-slider
+              [min]="1"
+              [max]="30"
+              [(ngModel)]="generateLength"
+              class="w-full"
+            ></p-slider>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <div class="col-12 p-0 m-0 pt-3">
+      <div class="w-full mb-4 flex justify-content-between">
+        <p-multiSelect
+          class="selectinput"
+          [options]="modelOptions"
+          [(ngModel)]="useModels"
+        ></p-multiSelect>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-megaphone"
+          class="p-button-primary flex-shrink-0"
+          (click)="generateSound()"
+          label="Generate"
+          [disabled]="
+            !useModels.length || !soundPrompt.length || !generateEnabled
+          "
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div
+    class="col-12 lg:col-6 xl:col-6 p-0 mb-6 lg:p-6 lg:pr-0 xl:pr-0 xl:pt-4 lg:pt-4"
+    style="position: relative"
+  >
+    <div
+      *ngIf="type == 'tts'"
+      class="card p-0 pl-4 pr-4"
+      id="waveform-tts"
+      [ngStyle]="{ display: progressVisible ? 'none' : 'block' }"
+    ></div>
+    <div
+      *ngIf="type != 'tts'"
+      class="card p-0 pl-4 pr-4"
+      id="waveform-sound"
+      [ngStyle]="{ display: progressVisible ? 'none' : 'block' }"
+    ></div>
+    <div *ngIf="progressVisible" class="card text-card p-0 pl-4 pr-4 font-bold">
+      <p-progressBar
+        class="w-full"
+        [value]="progressValue"
+        [showValue]="false"
+        [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+      ></p-progressBar>
+    </div>
+    <div class="mt-4">
+      <div class="p-0 m-0 justify-content-between flex">
+        <div class="m-0 p-0">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button p-button-secondary flex-shrink-0 p-button-outlined mr-2"
+            (click)="deleteSoundFile(activeSoundFile)"
+            [disabled]="!activeSoundFile || isPlaying"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-download"
+            class="p-button p-button-secondary flex-shrink-0 p-button-outlined mr-2"
+            (click)="downloadSoundFile(activeSoundFile)"
+            [disabled]="!activeSoundFile || isPlaying"
+          ></button>
+        </div>
+        <div class="m-0 p-0">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pause"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="pause()"
+            [disabled]="!activeSoundFile || !isPlaying || isPaused"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-play"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="play()"
+            [disabled]="!activeSoundFile || (isPlaying && !isPaused)"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeSoundFile" class="grid mt-2">
+      <div class="col-6 pb-0">
+        <b>Model:</b> {{ activeSoundFile.model_used }}
+      </div>
+      <div *ngIf="type == 'tts'" class="col-6 pb-0" style="text-align: right">
+        <b>Voice Used:</b> {{ activeSoundFile.label }}
+      </div>
+      <div class="col-12 pb-0"><b>Prompt:</b> {{ activeSoundFile.text }}</div>
+    </div>
+  </div>
+</div>
+<p-table
+  [value]="soundFiles"
+  scrollDirection="both"
+  [scrollable]="true"
+  styleClass="mt-3"
+  responsiveLayout="scroll"
+  sortField="created_at"
+  [sortOrder]="-1"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="text">Prompt</th>
+      <th *ngIf="type == 'tts'" pSortableColumn="label">Voice Used</th>
+      <th pSortableColumn="filename">Filename</th>
+      <th pSortableColumn="model_used">Model</th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-soundFile>
+    <tr>
+      <td style="cursor: pointer" (click)="selectFile(soundFile)">
+        {{ soundFile.text }}
+      </td>
+      <td *ngIf="type == 'tts'">{{ soundFile.label }}</td>
+      <td *ngIf="type == 'tts'">text-to-speech-{{ soundFile.id }}.wav</td>
+      <td *ngIf="type != 'tts'">sound-{{ soundFile.id }}.wav</td>
+      <td>
+        {{ soundFile.model_used }}
+      </td>
+
+      <td style="width: 180px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="deleteSoundFile(soundFile)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-download"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="downloadSoundFile(soundFile)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-play"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="selectFile(soundFile, true)"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
