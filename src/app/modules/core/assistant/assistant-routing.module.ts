@@ -21,6 +21,12 @@ import { EditAllyComponent } from "./component/edit-ally/edit-ally.component";
         data: { breadcrumb: "Edit Ally" },
       },
     ]),
+    RouterModule.forChild([
+      {
+        path: ":id",
+        component: ChatAppComponent,
+      },
+    ]),
   ],
   exports: [RouterModule],
 })

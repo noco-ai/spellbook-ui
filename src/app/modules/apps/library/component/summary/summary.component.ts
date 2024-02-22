@@ -28,7 +28,6 @@ export class BookSummaryComponent implements OnInit, OnDestroy {
   jobsSubscription!: Subscription;
   booksSubscription!: Subscription;
   progressSubscription!: Subscription;
-  analysisSubscription!: Subscription;
   summary: any[] = [];
 
   ngOnInit() {
@@ -52,26 +51,23 @@ export class BookSummaryComponent implements OnInit, OnDestroy {
       }
     );
 
-    this.analysisSubscription = this.libraryService.bookAnalysis.subscribe(
-      (analysis: LibraryBookAnalysis[]) => {
-        let summary: any[] = [];
-        for (let i = 0; i < analysis.length; i++) {
-          try {
-            if (!analysis[i].result?.trim().length) continue;
-            summary.push({ summary: analysis[i].result, chunk: i + 1 });
-          } catch (ex) {}
-        }
-        this.summary = summary;
-        this.doneLoading = true;
-      }
-    );
-
     this.booksSubscription = this.libraryService.bookList.subscribe(
       (books: LibraryBook[]) => {
         this.currentBook = books[0];
         this.libraryService.getBookAnalysisByBookAndType(
           this.currentBookId,
-          "fiction_short_description"
+          "fiction_short_description",
+          (analysis: LibraryBookAnalysis[]) => {
+            let summary: any[] = [];
+            for (let i = 0; i < analysis.length; i++) {
+              try {
+                if (!analysis[i].result?.trim().length) continue;
+                summary.push({ summary: analysis[i].result, chunk: i + 1 });
+              } catch (ex) {}
+            }
+            this.summary = summary;
+            this.doneLoading = true;
+          }
         );
       }
     );
@@ -110,6 +106,5 @@ export class BookSummaryComponent implements OnInit, OnDestroy {
     this.jobsSubscription.unsubscribe();
     this.booksSubscription.unsubscribe();
     this.progressSubscription.unsubscribe();
-    this.analysisSubscription.unsubscribe();
   }
 }

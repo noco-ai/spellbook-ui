@@ -5,3 +5,7 @@
 .selectinput ::ng-deep .p-multiselect {
   width: 100%;
 }
+
+.selected-img {
+  border: 2px solid var(--primary-color);
+}

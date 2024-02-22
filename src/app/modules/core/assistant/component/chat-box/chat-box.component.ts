@@ -8,21 +8,23 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
-  ChangeDetectorRef,
   SimpleChanges,
   OnChanges,
+  NgZone,
 } from "@angular/core";
 import { Subscription } from "rxjs";
-import { Message, Block } from "../../api/message";
+import { Message } from "../../api/message";
 import { Conversation } from "../../api/conversation";
 import { AssistantService } from "../../service/assistant.service";
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
+import { DomSanitizer } from "@angular/platform-browser";
 import { ConfirmationService, MessageService } from "primeng/api";
 import emojiRegex from "emoji-regex";
 import { ModelOptions } from "../../api/model-options";
 import { SocketService } from "src/app/service/sockets.service";
 import { SoundService } from "src/app/service/sound.service";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record";
+import { DigitalAlly } from "../../api/digital-allies";
+import WaveSurfer from "wavesurfer.js";
 
 @Component({
   selector: "app-chat-box",
@@ -46,7 +48,11 @@ export class ChatBoxComponent
   private asrModelsSubscription!: Subscription;
   private ttsModelsSubscription!: Subscription;
   private asrSubscription!: Subscription;
+  private ttsSubscription!: Subscription;
+  private messagesSubscription!: Subscription;
 
+  asrOnReload: boolean = false;
+  lastWasRegenerate: boolean = false;
   asrModels: ModelOptions[] = [];
   showGenerationSettings: boolean = false;
   canEdit: boolean = true;
@@ -82,11 +88,33 @@ export class ChatBoxComponent
       label: "Pin Manually Selected Models",
       value: "pin_models",
     },
+    {
+      label: "🔉 Auto submit microphone input",
+      value: "auto_asr",
+    },
+    {
+      label: "🔉 Use xTTS to vocalize model response",
+      value: "auto_tts",
+    },
+    {
+      label: "🔉 Switch allies on wake work detection",
+      value: "wake_words",
+    },
+    /*{
+      label: "Fact check model response using internet",
+      value: "fact_check",
+    },
+    {
+      label: "Auto label conversation",
+      value: "name_conversation",
+    },*/
   ];
 
   mirostatOptions = this.chatService.getMirostatOptions();
 
   @Input() conversation!: Conversation;
+  @Input() ally!: DigitalAlly;
+  @Input() wakeWords!: string[];
   @Input() maxHeight: string = "150px";
   @ViewChild("textarea") textarea: ElementRef | undefined;
   @ViewChild("conversationTopic") conversationTopic: ElementRef | undefined;
@@ -97,62 +125,139 @@ export class ChatBoxComponent
     private confirmationService: ConfirmationService,
     private socketService: SocketService,
     private messageService: MessageService,
-    private soundService: SoundService
+    private soundService: SoundService,
+    private zone: NgZone
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes["conversation"]) {
       this.lastClipboardFile = 1;
     }
+
+    if (changes["ally"]) {
+      var background = document.getElementById("background");
+      if (
+        background &&
+        this.ally &&
+        this.ally.location_image !=
+          "asset/spellbook/core/location-placeholder.jpeg"
+      ) {
+        background.style.backgroundImage = `url('${this.socketService.getBaseUrl()}${
+          this.ally.location_image
+        }')`;
+        background.style.backgroundSize = "cover";
+        background.style.backgroundRepeat = "no-repeat";
+        background.style.filter = "blur(5px)";
+        background.style.position = "fixed";
+        background.style.top = "0px";
+        background.style.left = "0px";
+        background.style.width = "100%";
+        background.style.height = "100%";
+        background.style.zIndex = "-1";
+      }
+
+      if (this.asrOnReload) {
+        this.asrOnReload = false;
+        this.sendMessage();
+      }
+
+      if (
+        !this.conversation.id &&
+        (!this.conversation.ally_id ||
+          this.conversation.ally_id != this.ally.id)
+      )
+        this.chatService.resetConversation(this.ally, false);
+    }
   }
 
   record?: any;
   wavesurfer?: any;
+  wavesurferPlayback?: any;
   isRecording: boolean = false;
+  isPlaying: boolean = false;
+  playbackQueue: string[] = [];
+  micOptions: any[] = [];
+  useMicrophone: string = "";
   async startRecord() {
-    if (this.isRecording) {
-      this.record.stopMic();
-      this.record.stopRecording();
-      this.isRecording = false;
-      return;
-    }
+    this.zone.runOutsideAngular(async () => {
+      if (this.isRecording) {
+        this.record.stopMic();
+        this.record.stopRecording();
+        this.isRecording = false;
+        return;
+      }
 
-    RecordPlugin.getAvailableAudioDevices().then((devices) => {
-      devices.forEach((device) => {
-        console.log(device);
-      });
+      this.isRecording = true;
+      await this.soundService.startRecording(this.record, this.useMicrophone);
     });
-
-    this.isRecording = true;
-    await this.soundService.startRecording(this.record);
   }
 
   async ngOnInit(): Promise<void> {
     this.baseIconUrl = this.chatService.getSocketUrl();
+    this.wavesurferPlayback = WaveSurfer.create({
+      container: `#chatplayback`,
+    });
 
-    const instance = await this.soundService.createWavesurferRecordingInstance(
-      "#chatrecord",
-      132
-    );
-    console.log(instance);
-    this.record = instance.record;
-    this.wavesurfer = instance.wavesurfer;
+    this.wavesurferPlayback.empty();
+    this.wavesurferPlayback.on("finish", async () => {
+      this.playbackQueue.splice(0, 1);
+      if (this.playbackQueue.length) {
+        this.wavesurferPlayback.empty();
+        await this.wavesurferPlayback.load(this.playbackQueue[0]);
+        this.wavesurferPlayback.playPause();
+      } else {
+        this.isPlaying = false;
+      }
+    });
 
-    this.record.on("record-end", async (blob: any) => {
-      const recordedUrl = URL.createObjectURL(blob);
-      const fileType = blob.type.split(";")[0].split("/")[1] || "webm";
-      fetch(recordedUrl)
-        .then((response) => response.blob())
-        .then((blob) => {
-          this.soundService.sendAsrToServer(blob, fileType);
-        });
+    RecordPlugin.getAvailableAudioDevices().then((devices) => {
+      devices.forEach((device) => {
+        if (device.kind == "audioinput") {
+          this.micOptions.push({ label: device.label, value: device.deviceId });
+          if (!this.useMicrophone.length) this.useMicrophone = device.deviceId;
+        }
+      });
     });
 
     this.asrSubscription = this.soundService.asrProcessingFinished.subscribe(
       (data) => {
-        if (this.textarea) this.textarea.nativeElement.innerHTML = data.text;
-        this.sendMessage();
         this.isRecording = false;
+        if (this.textarea) this.textarea.nativeElement.innerHTML = data.text;
+
+        if (
+          this.wakeWords?.length &&
+          this.conversation.router_config?.includes("wake_words")
+        ) {
+          const upper = data.text.toUpperCase();
+          for (let i = 0; i < this.wakeWords.length; i++) {
+            const split = this.wakeWords[i].split(":");
+            const index = upper.indexOf(split[0]);
+            if (index !== -1 && (index <= 48 || index >= upper.length - 48)) {
+              window.location.href = `#/ai-assistant/${split[1]}`;
+              this.asrOnReload = this.conversation.router_config?.includes(
+                "auto_asr"
+              )
+                ? true
+                : false;
+              return;
+            }
+          }
+        }
+
+        if (this.conversation.router_config?.includes("auto_asr"))
+          this.sendMessage();
+      }
+    );
+
+    this.ttsSubscription = this.soundService.ttsProcessingFinished.subscribe(
+      async (data) => {
+        this.playbackQueue.push(data.wav_url);
+        if (!this.isPlaying) {
+          this.wavesurferPlayback.empty();
+          await this.wavesurferPlayback.load(data.wav_url);
+          this.wavesurferPlayback.playPause();
+          this.isPlaying = true;
+        }
       }
     );
 
@@ -182,7 +287,35 @@ export class ChatBoxComponent
 
     // get other online skills related to chat
     this.asrModelsSubscription = this.chatService.asrModelList.subscribe(
-      (modelList: ModelOptions[]) => (this.asrModels = modelList || [])
+      async (modelList: ModelOptions[]) => {
+        this.asrModels = modelList || [];
+        if (this.asrModels.length && this.micOptions.length) {
+          this.zone.runOutsideAngular(async () => {
+            const instance =
+              await this.soundService.createWavesurferRecordingInstance(
+                "#chatrecord",
+                132
+              );
+
+            this.record = instance.record;
+            this.wavesurfer = instance.wavesurfer;
+
+            this.record.on("record-end", async (blob: any) => {
+              const recordedUrl = URL.createObjectURL(blob);
+              const fileType = blob.type.split(";")[0].split("/")[1] || "webm";
+              fetch(recordedUrl)
+                .then((response) => response.blob())
+                .then((blob) => {
+                  this.soundService.sendAsrToServer(blob, fileType);
+                });
+            });
+          });
+        }
+      }
+    );
+
+    this.messagesSubscription = this.chatService.conversationMessages.subscribe(
+      (messages: Message[]) => (this.conversation.messages = messages)
     );
 
     this.ttsModelsSubscription = this.chatService.ttsModelList.subscribe(
@@ -221,7 +354,7 @@ export class ChatBoxComponent
 
     this.setMessage();
     this.messageSubscription = this.chatService.incomingMessage.subscribe(
-      (message) => {
+      (message: any) => {
         if (message.content === "<stop>") {
           const lastMessageIndex = this.conversation.messages.length - 1;
           const lastUserMessageIndex = lastMessageIndex - 1;
@@ -242,6 +375,7 @@ export class ChatBoxComponent
             this.conversation.messages[lastUserMessageIndex].files =
               message.files;
           }
+
           const blocks = this.chatService.parseMarkdownBlocks(lastMessage.raw);
           this.conversation.messages[lastMessageIndex].blocks = blocks;
           this.conversation.messages[lastMessageIndex].content = "";
@@ -257,9 +391,40 @@ export class ChatBoxComponent
           message.content = "";
           this.conversation.messages.push(message);
         }
+        if (this.lastWasRegenerate)
+          this.chatService.getConversationMessages(
+            this.conversation.id,
+            this.conversation.messages[0].id
+          );
+
+        if (message.generated_files && message.generated_files.length) {
+          const lastMessageIndex = this.conversation.messages.length - 1;
+          this.conversation.messages[lastMessageIndex].filesList =
+            message.generated_files;
+          this.conversation.messages[lastMessageIndex].files =
+            message.generated_files.join(",");
+        }
+
+        localStorage.setItem(
+          `last-conversation-${this.ally?.id || 0}`,
+          "" + this.conversation.id
+        );
+
+        if (
+          this.conversation.router_config?.includes("auto_tts") &&
+          !message.generated_files.length
+        ) {
+          const lastMessageIndex = this.conversation.messages.length - 1;
+          const text = this.conversation.messages[lastMessageIndex].raw;
+          this.soundService.sendTtsToServer(
+            text,
+            this.ally?.voice || "default"
+          );
+        }
         this.canStopGeneration = false;
         this.canEdit = true;
         this.progressVisible = false;
+        this.lastWasRegenerate = false;
         this.cursorInUse = false;
         this.progressValue = 0;
         this.lastProgressPercent = 0;
@@ -315,7 +480,11 @@ export class ChatBoxComponent
           lastMessage == -1 ||
           this.conversation.messages[lastMessage].role !== "assistant"
         ) {
-          this.addAiMessage(text, ["asset/spellbook/core/ai-icon.jpeg"], "");
+          this.addAiMessage(
+            text,
+            [this.ally?.character_image || "asset/spellbook/core/ai-icon.jpeg"],
+            ""
+          );
         } else {
           const appendTo = this.conversation.messages[lastMessage];
           if (this.cursorInUse) {
@@ -337,6 +506,7 @@ export class ChatBoxComponent
   }
 
   ngOnDestroy() {
+    this.messagesSubscription.unsubscribe();
     this.fragmentSubscription.unsubscribe();
     this.iconSubscription.unsubscribe();
     this.onlineModelsSubscription.unsubscribe();
@@ -347,8 +517,14 @@ export class ChatBoxComponent
     this.asrModelsSubscription.unsubscribe();
     this.ttsModelsSubscription.unsubscribe();
     this.asrSubscription.unsubscribe();
-    this.record.destroy();
-    this.wavesurfer.destroy();
+    this.ttsSubscription.unsubscribe();
+    this.chatService.resetConversation(null, false);
+    if (this.record) {
+      this.zone.runOutsideAngular(async () => {
+        this.record.destroy();
+        this.wavesurfer.destroy();
+      });
+    }
   }
 
   onDragOver(event: Event) {
@@ -439,7 +615,7 @@ export class ChatBoxComponent
     this.showEditConversationDialog = false;
     this.conversation.topic = this.conversationTopic?.nativeElement.value;
     if (!this.conversation.id) return;
-    this.chatService.updateConversation(this.conversation);
+    this.chatService.updateConversation(this.conversation, this.ally?.id || 0);
   }
 
   adjustHeight(event: any) {
@@ -460,6 +636,18 @@ export class ChatBoxComponent
       );
       this.message = filteredMessages[filteredMessages.length - 1];
     }
+  }
+
+  async playGeneratedSound(soundFile: string) {
+    const url = this.chatService.getBaseUrl() + soundFile;
+    await this.wavesurferPlayback.load(url);
+    this.wavesurferPlayback.playPause();
+    this.isPlaying = true;
+  }
+
+  async stopGeneratedSound() {
+    if (!this.isPlaying) return;
+    this.wavesurferPlayback.playPause();
   }
 
   ngAfterViewChecked() {
@@ -498,27 +686,31 @@ export class ChatBoxComponent
         "Are you sure that you want to delete this message and it's response?",
       icon: "pi pi-exclamation-triangle",
       accept: () => {
-        this.chatService.deleteConversationMessages(message.id);
-        this.conversation.messages.splice(
-          this.conversation.messages.length - 2,
-          2
-        );
+        this.chatService.deleteConversationMessage(message.id, () => {
+          this.chatService.getConversationMessages(
+            this.conversation.id,
+            this.conversation.first_message_id
+          );
+        });
       },
       reject: () => {},
     });
   }
 
-  /*cancelEdit(message: Message, div: any) {
-    //let content = div.innerText;
+  cancelEdit(message: Message, div: any) {
     div.innerText = message.content;
     message.is_editing = false;
     this.canEdit = true;
   }
 
-  startRegenerate(message: Message, div: any) {
-    console.log(div.innerText);
-    console.log(message);
-  }*/
+  startRegenerate(message: Message, div: any, index: number) {
+    let content = div.innerText.replace(/<br\s*\/?>/g, "\n");
+    this.chatService.clipMessages(index);
+    const sendMessage = this.prepUserMessage(content);
+    const payload = this.prepMessagePayload(content);
+    this.lastWasRegenerate = true;
+    this.chatService.sendMessage(sendMessage, payload);
+  }
 
   private addAiMessage(text: string, icons: string[], shortcuts: string) {
     this.conversation.messages.push({
@@ -535,11 +727,12 @@ export class ChatBoxComponent
       raw: text,
       files: "",
       filesList: [],
+      siblings: [],
     });
   }
 
   showSidebar() {
-    this.chatService.getConversations();
+    this.chatService.getConversations(this.ally?.id || undefined);
     this.sidebarVisibilityChange.emit(true);
   }
 
@@ -555,7 +748,10 @@ export class ChatBoxComponent
       icon: "pi pi-exclamation-triangle",
       accept: () => {
         this.chatService.deleteConversation(conversationId);
-        this.chatService.resetConversation();
+        this.chatService.resetConversation(this.ally);
+        window.localStorage.removeItem(
+          `last-conversation-${this.ally?.id || 0}`
+        );
         this.lastClipboardFile = 1;
       },
       reject: () => {},
@@ -573,8 +769,133 @@ export class ChatBoxComponent
       lastIndex = match.index + match[0].length;
       match = regex.exec(s);
     }
-
     return result;
+  }
+
+  private prepUserMessage(messageContent: string) {
+    const filesList = this.uploadedFiles.join(",");
+    let sendMessage = {
+      id: 0,
+      parent_id: 0,
+      icon: ["asset/spellbook/core/user-avatar.png"],
+      conversation_id: this.conversation.id,
+      content: messageContent,
+      role: "user",
+      shortcuts: "",
+      created_at: new Date().getTime(),
+      blocks: [],
+      is_editing: false,
+      raw: messageContent,
+      files: filesList,
+      filesList: this.uploadedFiles,
+      siblings: [],
+    };
+    return sendMessage;
+  }
+
+  private findLongestCommonStartingString(messages: Message[]) {
+    if (!messages || messages.length < 2) return "";
+    let commonPrefix = messages[1].content;
+
+    for (let i = 1; i < messages.length; i++) {
+      if (messages[i].role == "user") continue;
+      let currentString = messages[i].content;
+      for (let j = 0; j < commonPrefix.length; j++) {
+        if (j >= currentString.length || commonPrefix[j] !== currentString[j]) {
+          commonPrefix = commonPrefix.substring(0, j);
+          break;
+        }
+      }
+    }
+    return commonPrefix;
+  }
+
+  private prepMessagePayload(messageContent: string) {
+    const shortcuts = this.extractLeadingEmojis(messageContent);
+    messageContent = messageContent.slice(shortcuts.length);
+
+    // build the payload to send to server
+    const stream = true;
+    let payload: {
+      stream: boolean;
+      start_response: string;
+      messages: any[];
+      ai_icon: string;
+      content: string;
+      shortcuts: string;
+      ally_id: number;
+    } = {
+      stream: stream,
+      messages: [],
+      content: messageContent,
+      shortcuts: shortcuts,
+      start_response: "",
+      ally_id: this.ally?.id || 0,
+      ai_icon:
+        this.ally?.character_image || "asset/spellbook/core/ai-icon.jpeg",
+    };
+
+    const numPrimers = this.ally?.loaded_tones?.length || 0;
+    const primers = this.ally?.loaded_tones || [];
+    if (numPrimers && this.conversation.messages.length / 2 < numPrimers) {
+      const usePrimers = numPrimers - this.conversation.messages.length / 2;
+      for (let i = 0; i < usePrimers; i++) {
+        if (!primers[i].user.length || !primers[i].assistant.length) continue;
+        payload.messages.push({ role: "user", content: primers[i].user });
+        payload.messages.push({
+          role: "assistant",
+          content: primers[i].assistant,
+        });
+      }
+    }
+
+    for (let i = 0; i < this.conversation.messages.length; i++) {
+      const message: Message = this.conversation.messages[i];
+      payload.messages.push({ role: message["role"], content: message["raw"] });
+    }
+
+    if (this.ally && numPrimers) {
+      const startResponse = this.findLongestCommonStartingString(
+        payload.messages
+      );
+      payload.start_response = startResponse;
+    }
+
+    payload.messages.push({ role: "user", content: messageContent });
+    return payload;
+  }
+
+  navigateToSibling(
+    currentMessageId: number,
+    parentId: number,
+    siblings: number[],
+    direction: "next" | "previous"
+  ): void {
+    const currentIndex = siblings.indexOf(currentMessageId);
+    let targetIndex;
+
+    if (direction === "next") {
+      targetIndex = currentIndex + 1;
+      if (targetIndex >= siblings.length) targetIndex = 0;
+    } else {
+      targetIndex = currentIndex - 1;
+      if (targetIndex < 0) targetIndex = siblings.length - 1;
+    }
+
+    if (targetIndex >= 0 && targetIndex < siblings.length) {
+      const targetId = siblings[targetIndex];
+      this.chatService.switchMessageChain(
+        targetId,
+        parentId,
+        this.conversation.id
+      );
+      if (parentId == 0) this.conversation.first_message_id = targetId;
+    }
+  }
+
+  getCurrentPosition(messageId: number, siblings: number[]): number {
+    const index = siblings.indexOf(messageId);
+    return index >= 0 ? index + 1 : -1;
   }
 
   sendMessage() {
@@ -583,53 +904,11 @@ export class ChatBoxComponent
       "\n"
     );
 
-    const shortcuts = this.extractLeadingEmojis(message);
-    message = message.slice(shortcuts.length);
-
-    // build the payload to send to server
-    const stream = true;
-    let payload: {
-      stream: boolean;
-      messages: any[];
-      content: string;
-      shortcuts: string;
-    } = {
-      stream: stream,
-      messages: [],
-      content: message,
-      shortcuts: shortcuts,
-    };
-
-    for (let i = 0; i < this.conversation.messages.length; i++) {
-      const message: Message = this.conversation.messages[i];
-      payload.messages.push({ role: message["role"], content: message["raw"] });
-    }
-    payload.messages.push({ role: "user", content: message });
-
-    const filesList = this.uploadedFiles.join(",");
-    let sendMessage = {
-      id: 0,
-      parent_id: 0,
-      icon: ["asset/spellbook/core/user-avatar.png"],
-      conversation_id: this.conversation.id,
-      content: message,
-      role: "user",
-      shortcuts: "",
-      created_at: new Date().getTime(),
-      blocks: [],
-      is_editing: false,
-      raw: message,
-      files: filesList,
-      filesList: this.uploadedFiles,
-    };
-
+    const sendMessage = this.prepUserMessage(message);
+    const payload = this.prepMessagePayload(message);
     this.chatService.sendMessage(sendMessage, payload);
     this.uploadedFiles = [];
-
-    // clear the div
-    if (this.textarea) {
-      this.textarea.nativeElement.innerHTML = "";
-    }
+    if (this.textarea) this.textarea.nativeElement.innerHTML = "";
   }
 
   parseDate(timestamp: number) {
@@ -638,22 +917,16 @@ export class ChatBoxComponent
     let minutes = date.getMinutes();
     let seconds = date.getSeconds();
     let day = date.getDate();
-    let month = date.getMonth() + 1; // months are 0-based in JS
+    let month = date.getMonth() + 1;
     let year = date.getFullYear();
-
-    // Convert to 12-hour format
     let period = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-
-    // If you want to add leading zeros:
+    hours = hours ? hours : 12;
     let hoursFormatted = hours < 10 ? "0" + hours : hours;
     let minutesFormatted = minutes < 10 ? "0" + minutes : minutes;
     let secondsFormatted = seconds < 10 ? "0" + seconds : seconds;
     let dayFormatted = day < 10 ? "0" + day : day;
     let monthFormatted = month < 10 ? "0" + month : month;
-
-    // return as HH:MM:SS AM/PM, DD-MM-YYYY format
     return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted} ${period}, ${dayFormatted}-${monthFormatted}-${year}`;
   }
 }

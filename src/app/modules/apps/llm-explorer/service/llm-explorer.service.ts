@@ -48,23 +48,23 @@ export class LlmExplorerService {
     return count < 5 ? 5 : count;
   }
 
-  stopGeneration(modelName: string) {
+  async stopGeneration(modelName: string) {
     this.socketService.send("command", {
       command: "llm_explorer_stop_generation",
-      socket_id: this.socketService.getSocketId(),
+      socket_id: await this.socketService.getSocketId(),
       routing_key: modelName,
     });
   }
 
   async executeCompletion(payload: CompletionRequest): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const httpOptions = {
         headers: new HttpHeaders({
           "Content-Type": "application/json",
           Authorization: this.socketService.getToken(),
         }),
       };
-      payload.socket_id = this.socketService.getSocketId();
+      payload.socket_id = await this.socketService.getSocketId();
       const url = this.socketService.getBaseUrl() + `api/v1/completion`;
       this.http.post<any>(url, payload, httpOptions).subscribe((data) => {
         this.outputUpdate.emit(data.payload);
@@ -79,7 +79,7 @@ export class LlmExplorerService {
     useModel: string,
     maxNewTokens: number
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const httpOptions = {
         headers: new HttpHeaders({
           "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export class LlmExplorerService {
       const body = {
         input: input,
         unique_key: uniqueKey,
-        socket_id: this.socketService.getSocketId(),
+        socket_id: await this.socketService.getSocketId(),
         use_model: useModel,
         max_new_tokens: maxNewTokens,
       };

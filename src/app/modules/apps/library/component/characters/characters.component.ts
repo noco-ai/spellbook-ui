@@ -25,7 +25,6 @@ export class BookCharactersComponent implements OnInit, OnDestroy {
   currentBook!: LibraryBook;
   currentBookId: number = 0;
   booksSubscription!: Subscription;
-  modelsSubscription!: Subscription;
   toastSubscription!: Subscription;
   imageModelsSubscription!: Subscription;
   analysisSubscription!: Subscription;
@@ -196,7 +195,7 @@ export class BookCharactersComponent implements OnInit, OnDestroy {
       message: `Are you sure you want to delete this character?`,
       icon: `pi pi-trash`,
       accept: () => {
-        this.libraryService.deleteRefinedCharacter(id, (data: any) => {
+        this.libraryService.deleteBookAnalysis(id, (data: any) => {
           this.getResource = "merge";
           this.libraryService.getBookAnalysisByBookAndType(
             this.currentBook.id,
@@ -246,6 +245,7 @@ export class BookCharactersComponent implements OnInit, OnDestroy {
     this.toastSubscription.unsubscribe();
     this.regenerateArtSubscription.unsubscribe();
     this.mergeCharacterSubscription.unsubscribe();
+    this.jobsSubscription.unsubscribe();
   }
 
   ngOnInit() {
@@ -457,11 +457,14 @@ export class BookCharactersComponent implements OnInit, OnDestroy {
         this.rawData = [];
         for (let i = 0; i < analysis.length; i++) {
           try {
+          console.log(analysis[i].result);
             const json = JSON.parse(analysis[i].result);
             this.rawData = [...this.rawData, ...json];
-          } catch (ex) {}
+          } catch (ex) {
+            console.log(ex);
+          }
         }
-
+        
         const merged = new Map();
         for (let i = 0; i < this.rawData.length; i++) {
           if (!this.rawData[i].name || this.rawData[i].processed) continue;

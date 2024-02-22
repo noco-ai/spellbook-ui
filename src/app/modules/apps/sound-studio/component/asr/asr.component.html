@@ -32,7 +32,7 @@
   </div>
 </p-dialog>
 <div class="grid m-1 mb-8">
-  <div class="col-12 lg:col-6 xl:col-6 m-0 p-0">
+  <div class="col-12 xl:col-6 m-0 p-0">
     <p-fileUpload
       #fileUploader
       name="asrfiles[]"
@@ -56,12 +56,9 @@
       </ng-template>
     </p-fileUpload>
   </div>
-  <div
-    class="col-12 lg:col-6 xl:col-6 p-0 pl-6 pb-4"
-    style="position: relative"
-  >
+  <div class="col-12 xl:col-6 p-0 pl-0 xl:pl-6 pb-4" style="position: relative">
     <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
-      <div class="card p-0 pl-4 pr-4" id="asrplay"></div>
+      <div class="card p-0 pl-4 pr-4 m-0 mt-4 xl:mt-0" id="asrplay"></div>
     </div>
     <div class="mt-4">
       <div class="p-0 m-0 justify-content-between flex">
@@ -104,7 +101,7 @@
       </div>
     </div>
   </div>
-  <div class="col-12 lg:col-6 xl:col-6 m-0 p-0">
+  <div class="col-12 xl:col-6 m-0 p-0">
     <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
       <div class="card p-0 pl-4 pr-4" id="record"></div>
     </div>
@@ -145,9 +142,9 @@
       </div>
     </div>
   </div>
-  <div class="col-12 lg:col-6 xl:col-6 m-0 p-0">
+  <div class="col-12 xl:col-6 m-0 p-0">
     <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
-      <div class="card text-card ml-6 p-0 pl-4 pr-4 font-bold">
+      <div class="card text-card ml-0 xl:ml-6 p-0 pl-4 pr-4 font-bold">
         <p-progressBar
           *ngIf="progressShowing"
           class="w-full"
@@ -164,7 +161,7 @@
   [value]="soundFiles"
   scrollDirection="both"
   [scrollable]="true"
-  styleClass="mt-3"
+  styleClass="xl:mt-3"
   responsiveLayout="scroll"
   sortField="created_at"
   [sortOrder]="-1"
@@ -176,7 +173,9 @@
       </th>
       <th pSortableColumn="label">Label</th>
       <th pSortableColumn="id">Filename</th>
-      <th pSortableColumn="model_used">Model</th>
+      <th pSortableColumn="model_used" class="hidden lg:block xl:block">
+        Model
+      </th>
       <th></th>
     </tr>
   </ng-template>
@@ -190,11 +189,11 @@
       </td>
       <td>{{ downloadFilename(soundFile) }}</td>
 
-      <td>
+      <td class="hidden lg:block xl:block">
         {{ soundFile.model_used }}
       </td>
 
-      <td style="width: 180px">
+      <td style="width: 190px">
         <button
           pButton
           type="button"

@@ -1,5 +1,8 @@
 <div *ngIf="fileList.length" class="upload-files mb-6">
-  <div *ngFor="let fileName of fileList; let i = index; let last = last"  style="max-width: 60%">
+  <div
+    *ngFor="let fileName of fileList; let i = index; let last = last"
+    style="max-width: 60%"
+  >
     <ng-container [ngSwitch]="getFileType(fileName)">
       <div *ngSwitchCase="'image'" class="card upload-card m-0 p-0 pt-6 pb-4">
         <div class="align-content-center">
@@ -16,18 +19,33 @@
 
       <div
         *ngSwitchCase="'audio'"
-        class="card p-0 audio-background"
-        [style]="'background-image: url(' + baseUrl + 'asset/spellbook/core/sound-upload.jpeg)'"
+        class="card p-0 audio-background mt-4"
         style="position: relative"
+        [style]="
+          'background-image: url(' +
+          baseUrl +
+          'asset/spellbook/core/sound-upload.jpeg)'
+        "
       >
-        <div class="align-content-center pt-1 pb-2 audio-card">
-          <audio controls>
-            <source
-              [src]="baseUrl + fileName"
-              type="audio/wav"
-            />
-            Your browser does not support the audio element.
-          </audio>
+        <div
+          class="align-content-center pt-1 pb-2 audio-card justify-content-around"
+        >
+          <div class="p-0 m-0" style="position: absolute; bottom: 8px">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-stop"
+              class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-3"
+              (click)="stop()"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-play"
+              class="p-button-primary p-button-outlined flex-shrink-0 p-button-icon-only"
+              (click)="play(fileName)"
+            ></button>
+          </div>
         </div>
         <p>
           {{ getFilenameFromPath(fileName) }}

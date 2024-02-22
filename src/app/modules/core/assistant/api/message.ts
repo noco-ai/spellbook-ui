@@ -15,6 +15,7 @@ export interface Message {
   created_at: number;
   blocks: Block[];
   is_editing: boolean;
+  siblings: number[];
   raw: string;
   files: string;
   filesList: string[];

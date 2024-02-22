@@ -1,7 +1,9 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
 <div class="grid flex" style="position: relative">
   <div class="pr-3" style="position: absolute; right: 78px; top: -56px">
     <button
       pButton
+      (click)="goBack()"
       type="button"
       icon="pi pi-directions-alt"
       class="p-button flex-shrink-0 p-button-outlined"
@@ -13,9 +15,9 @@
 <div class="card">
   <div class="grid">
     <p-fieldset
-      legend="Basic Information"
+      legend="Character Information"
       [toggleable]="false"
-      class="line-height-3 m-0 grid col-7"
+      class="line-height-3 m-0 grid col-12 lg:col-7 xl:col-7"
     >
       <ng-template pTemplate="content">
         <div class="grid w-full m-0">
@@ -29,7 +31,6 @@
               pInputText
             />
           </div>
-          <!-- ... other input fields ... -->
           <div class="col-4">
             <label>Tag Line</label>
             <input
@@ -50,27 +51,16 @@
               pInputText
             />
           </div>
-          <div class="col-4">
-            <label>Voice</label>
-            <input
-              [(ngModel)]="currentAlly.voice"
-              tabindex="2"
-              class="p-inputtext p-component p-element w-full"
-              type="text"
-              pInputText
-            />
-          </div>
+
           <div class="col-4">
             <label>Preferred Model</label>
-            <input
+            <p-dropdown
               [(ngModel)]="currentAlly.use_model"
-              tabindex="4"
-              class="p-inputtext p-component p-element w-full"
-              type="text"
-              pInputText
-            />
+              [options]="llmModelOptions"
+              class="selectinput"
+            ></p-dropdown>
           </div>
-          <div class="col-4">
+          <!--<div class="col-4">
             <label>Context Limits</label>
             <input
               [(ngModel)]="currentAlly.chat_round_limits"
@@ -79,8 +69,8 @@
               type="text"
               pInputText
             />
-          </div>
-          <div class="col-12">
+          </div>-->
+          <div class="col-8">
             <label>Short Description</label>
             <input
               [(ngModel)]="currentAlly.short_description"
@@ -90,64 +80,107 @@
               pInputText
             />
           </div>
+          <div class="col-4">
+            <label>Voice</label>
+            <p-dropdown
+              [disabled]="!isOptionToggled('auto_tts')"
+              [(ngModel)]="currentAlly.voice"
+              [options]="voiceOptions"
+              class="selectinput"
+            ></p-dropdown>
+          </div>
+          <div class="col-4">
+            <label>Sort Order</label>
+            <input
+              [(ngModel)]="currentAlly.sort_order"
+              tabindex="8"
+              class="p-inputtext p-component p-element w-full"
+              type="number"
+              pInputText
+            />
+          </div>
         </div>
       </ng-template>
     </p-fieldset>
-
     <p-fieldset
       legend="Conversation Settings"
       [toggleable]="false"
-      class="col-5"
+      class="col-12 lg:col-5 xl:col-5"
     >
       <ng-template pTemplate="content">
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
-          <label class="ml-2">Function Calling</label>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('function_calling')"
+            [(ngModel)]="optionStates['function_calling']"
+          ></p-inputSwitch>
+          <label class="ml-2">Function Calling Enabled</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
-          <label class="ml-2">Model Routing</label>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('model_routing')"
+            [(ngModel)]="optionStates['model_routing']"
+          ></p-inputSwitch>
+          <label class="ml-2">Model Routing Enabled</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
-          <label class="ml-2">📌 Manual Functions</label>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('pin_functions')"
+            [(ngModel)]="optionStates['pin_functions']"
+          ></p-inputSwitch>
+          <label class="ml-2">Pin Manually Selected Functions</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
-          <label class="ml-2">📌 Manual Model Routing</label>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('pin_models')"
+            [(ngModel)]="optionStates['pin_models']"
+          ></p-inputSwitch>
+          <label class="ml-2">Pin Manually Selected Models</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('auto_asr')"
+            [(ngModel)]="optionStates['auto_asr']"
+          ></p-inputSwitch>
           <label class="ml-2">🔉 Auto submit microphone input</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('auto_tts')"
+            [(ngModel)]="optionStates['auto_tts']"
+          ></p-inputSwitch>
           <label class="ml-2">🔉 Use xTTS to vocalize model response</label>
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
-          <label class="ml-2"
-            >🔉 Switch to alternate allies on wake work detection</label
-          >
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('wake_words')"
+            [(ngModel)]="optionStates['wake_words']"
+          ></p-inputSwitch>
+          <label class="ml-2">🔉 Switch allies on wake work detection</label>
         </div>
-        <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
+        <!--<div class="w-full flex" style="align-items: center">
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('fact_check')"
+            [(ngModel)]="optionStates['fact_check']"
+          ></p-inputSwitch>
           <label class="ml-2"
             >Fact check model response using Bing Search</label
           >
         </div>
         <div class="w-full flex" style="align-items: center">
-          <p-inputSwitch></p-inputSwitch>
+          <p-inputSwitch
+            (onChange)="toggleConversationOption('name_conversation')"
+            [(ngModel)]="optionStates['name_conversation']"
+          ></p-inputSwitch>
           <label class="ml-2"
             >Name conversation automatically after two rounds</label
           >
-        </div>
+        </div>-->
       </ng-template>
     </p-fieldset>
     <p-fieldset
       legend="Generation Settings"
       [toggleable]="false"
-      class="line-height-3 m-0 col-4"
+      class="line-height-3 m-0 col-12 lg:col-4 xl:col-4"
     >
       <ng-template pTemplate="content">
         <label class="mt-0">Top K</label>
@@ -267,7 +300,7 @@
     <p-fieldset
       legend="Character Image"
       [toggleable]="false"
-      class="line-height-3 m-0 col-4"
+      class="line-height-3 m-0 col-12 lg:col-4 xl:col-4"
       style="height: fit-content"
     >
       <ng-template pTemplate="content">
@@ -276,6 +309,9 @@
           style="overflow: auto; max-height: 484px"
         >
           <div
+            [class.selected-img]="
+              currentAlly.character_image == image.image_url
+            "
             class="col-4 p-0 m-0"
             style="cursor: pointer"
             (click)="selectCharacterImage(image)"
@@ -284,7 +320,7 @@
             <img
               [src]="getImageUrl(image.image_url)"
               width="100%"
-              class="p-2"
+              class="p-2 pb-0"
               style="pointer-events: none"
             />
           </div>
@@ -295,7 +331,7 @@
     <p-fieldset
       legend="Location Image"
       [toggleable]="false"
-      class="line-height-3 m-0 col-4"
+      class="line-height-3 m-0 col-12 lg:col-4 xl:col-4"
     >
       <ng-template pTemplate="content">
         <div
@@ -303,15 +339,16 @@
           style="overflow: auto; max-height: 484px"
         >
           <div
+            [class.selected-img]="currentAlly.location_image == image.image_url"
             class="col-4 p-0 m-0"
             style="cursor: pointer"
-            (click)="selectCharacterImage(image)"
-            *ngFor="let image of characterImages"
+            (click)="selectLocationImage(image)"
+            *ngFor="let image of locationImages"
           >
             <img
               [src]="getImageUrl(image.image_url)"
               width="100%"
-              class="p-2"
+              class="p-2 pb-0"
               style="pointer-events: none"
             />
           </div>
@@ -322,14 +359,15 @@
     <p-fieldset
       legend="Conversation Tone"
       [toggleable]="false"
-      class="line-height-3 m-0 col-7"
+      class="line-height-3 m-0 col-12 lg:col-7 xl:col-7"
     >
       <ng-template pTemplate="content">
-        <div class="grid flex">
+        <div *ngFor="let tone of conversationTone">
           <div class="col-12">
             <label>User Input</label>
             <textarea
-              rows="8"
+              [(ngModel)]="tone.user"
+              rows="4"
               tabindex="6"
               class="p-inputtext p-component p-element w-full"
               pInputTextArea
@@ -338,11 +376,45 @@
           <div class="col-12">
             <label>Ally Output</label>
             <textarea
-              rows="8"
+              [(ngModel)]="tone.assistant"
+              rows="4"
               tabindex="6"
               class="p-inputtext p-component p-element w-full"
               pInputTextArea
             ></textarea>
+          </div>
+        </div>
+
+        <div class="grid flex">
+          <div class="col-10 p-0 m-0 pl-3 mt-2">
+            <p *ngIf="!conversationTone.length">
+              The conversation tone lets you define user/assistant example pairs
+              to show the model how you want it to respond.
+            </p>
+          </div>
+          <div class="col-2 p-0 m-0 justify-content-between flex">
+            <div></div>
+            <div
+              [class.mt-4]="conversationTone.length"
+              [class.mr-5]="conversationTone.length"
+            >
+              <button
+                [disabled]="conversationTone.length == 0"
+                pButton
+                type="button"
+                icon="pi pi-minus"
+                class="p-button flex-shrink-0 p-button-outlined mr-2"
+                (click)="removeTone()"
+              ></button>
+              <button
+                [disabled]="conversationTone.length >= 4"
+                pButton
+                type="button"
+                icon="pi pi-plus"
+                class="p-button flex-shrink-0 p-button-outlined"
+                (click)="addTone()"
+              ></button>
+            </div>
           </div>
         </div>
       </ng-template>
@@ -350,7 +422,7 @@
     <p-fieldset
       legend="Character Card"
       [toggleable]="false"
-      class="line-height-3 m-0 col-5"
+      class="line-height-3 m-0 col-12 lg:col-5 xl:col-5"
     >
       <ng-template pTemplate="content">
         <div class="grid flex">
@@ -360,6 +432,7 @@
               tabindex="6"
               class="p-inputtext p-component p-element w-full"
               pInputTextArea
+              [(ngModel)]="currentAlly.system_message"
             ></textarea>
           </div>
         </div>
@@ -371,6 +444,7 @@
       <div>
         <button
           pButton
+          (click)="goBack()"
           type="button"
           icon="pi pi-ban"
           class="p-button-secondary flex-shrink-0 p-button-outlined mr-2"
@@ -378,12 +452,28 @@
           &nbsp;Cancel
         </button>
         <button
+          *ngIf="currentAlly.id"
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button p-button-secondary p-button-outlined mr-2"
+          (click)="deleteAlly(currentAlly)"
+        >
+          &nbsp;Delete
+        </button>
+        <button
           pButton
           type="button"
           icon="pi pi-save"
           class="p-button flex-shrink-0"
+          (click)="saveAlly(currentAlly)"
+          [disabled]="
+            !currentAlly.name.length ||
+            !currentAlly.system_message?.length ||
+            !currentAlly.character_image
+          "
         >
-          &nbsp;{{ true ? "Save" : "Create" }}
+          &nbsp;{{ currentAlly.id ? "Save" : "Create" }}
         </button>
       </div>
     </div>

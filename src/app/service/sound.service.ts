@@ -17,6 +17,7 @@ interface FilterDetail {
 })
 export class SoundService {
   asrProcessingFinished: EventEmitter<any> = new EventEmitter<any>();
+  ttsProcessingFinished: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(
     private http: HttpClient,
@@ -29,6 +30,15 @@ export class SoundService {
       "process_asr_data",
       (data) => {
         this.asrProcessingFinished.emit(data);
+      }
+    );
+
+    this.socketService.subscribeToEventWithFilter(
+      "finish_command",
+      "command",
+      "process_tts_data",
+      (data) => {
+        this.ttsProcessingFinished.emit(data);
       }
     );
   }
@@ -60,8 +70,7 @@ export class SoundService {
     try {
       await record.startMic();
       await record.stopMic();
-    }
-    catch (ex) {}
+    } catch (ex) {}
     return { wavesurfer: wavesurfer, record: record };
   }
 
@@ -152,6 +161,14 @@ export class SoundService {
       command: "process_asr_data",
       wav: encodedBlob,
       file_type: fileType,
+    });
+  }
+
+  async sendTtsToServer(text: string, voice: string) {
+    this.socketService.send("command", {
+      command: "process_tts_data",
+      text: text,
+      voice: voice,
     });
   }
 }

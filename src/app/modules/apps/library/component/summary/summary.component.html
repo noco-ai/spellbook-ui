@@ -27,9 +27,9 @@
 </h6>
 <div class="w-full mb-4 mt-4 grid flex">
   <ng-container *ngFor="let item of summary">
-    <p-divider layout="horizontal" align="center" class="w-full">
+    <!--<p-divider layout="horizontal" align="center" class="w-full">
       <span class="p-tag mr-2">Book Chunk #{{ item.chunk }}</span>
-    </p-divider>
+    </p-divider>-->
     <div *ngIf="item.summary.length" class="col-12 pl-6 pr-6">
       {{ item.summary }}
     </div>

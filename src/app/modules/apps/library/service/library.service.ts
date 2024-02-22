@@ -206,7 +206,7 @@ export class LibraryService {
     analysisType: string,
     callback?: Function
   ) {
-    const query = `query LibraryBookAnalysis($book_id: Int!, $process: String!) { getLibraryBookAnalysis(book_id: $book_id, process: $process) { id, result, content_id, created_at } }`;
+    const query = `query LibraryBookAnalysis($book_id: Int!, $process: String!) { getLibraryBookAnalysis(book_id: $book_id, process: $process) { id, result, content_id, user_id, created_at } }`;
     this.graphqlService
       .sendQuery(query, { book_id: bookId, process: analysisType })
       .subscribe((data) => {
@@ -328,7 +328,8 @@ export class LibraryService {
     });
   }
 
-  async deleteRefinedCharacter(id: number, callback?: Function) {
+  async deleteBookAnalysis(id: number, callback?: Function) {
+    console.log(id);
     const query = `mutation LibraryBookAnalysisDelete($id: Int!) { deleteLibraryBookAnalysis(id: $id) { id } }`;
     this.graphqlService.sendQuery(query, { id: id }).subscribe((data) => {
       if (callback) callback(data);

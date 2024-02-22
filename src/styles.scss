@@ -68,15 +68,6 @@ body {
   vertical-align: middle;
 }
 
-.audio-card div {
-  display: none;
-  margin: auto;
-}
-
-.audio-card:hover div {
-  display: block;
-}
-
 .map-container {
   font-family: "Courier New", monospace;
   white-space: pre; /* This ensures that whitespace is preserved */

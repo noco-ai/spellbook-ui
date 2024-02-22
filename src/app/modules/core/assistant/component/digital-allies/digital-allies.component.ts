@@ -9,7 +9,6 @@ import { Subscription } from "rxjs";
 })
 export class DigitalAlliesComponent implements OnInit, OnDestroy {
   listView: boolean = false;
-  showEdit: boolean = false;
   digitalAllies: DigitalAlly[] = [];
   allySubscription!: Subscription;
 
@@ -32,18 +31,18 @@ export class DigitalAlliesComponent implements OnInit, OnDestroy {
     return this.chatService.getBaseUrl() + url;
   }
 
-  editAlly(ally: DigitalAlly) {
-    console.log(ally);
-    window.location.href = "#/ai-assistant/edit-ally/0";
+  editAlly($event: Event, ally: DigitalAlly) {
+    $event.stopPropagation();
+    window.location.href = `#/ai-assistant/edit-ally/${ally.id}`;
   }
 
-  chatWithAlly(ally: DigitalAlly) {
-    console.log("chat");
-    console.log(ally);
+  createAlly() {
+    window.location.href = `#/ai-assistant/edit-ally/0`;
   }
 
-  toggleEdit() {
-    this.showEdit = !this.showEdit ? true : false;
+  chatWithAlly($event: Event, ally: DigitalAlly) {
+    $event.stopPropagation();
+    window.location.href = `#/ai-assistant/${ally.id}`;
   }
 
   toggleListView() {

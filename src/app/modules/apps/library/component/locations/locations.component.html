@@ -1,7 +1,14 @@
 <app-art-dialog
   [book]="currentBook"
   [visible]="showGenerateArtworkDialog"
+  (onHide)="hideImageDialog()"
+  [resourceType]="'locations'"
+  (onHide)="hideImageDialog()"
+  (onSubmit)="startImageGeneration()"
+  [regenerate]="regeneratePrompt"
+  [regenerateId]="regenerateId"
 ></app-art-dialog>
+<p-toast></p-toast>
 <div class="grid flex" style="position: relative">
   <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
     <button
@@ -34,58 +41,175 @@
       type="button"
       icon="pi pi-image"
       class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="stopGeneration()"
+      [disabled]="!stopImageGenerationEnabled"
+      *ngIf="imagePromptGenerationRunning || imageGenerationRunning"
+    >
+      &nbsp;Stop Generation
+    </button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-image"
+      [disabled]="jobsRunning"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
       (click)="generateArtwork(currentBook)"
-      *ngIf="rawData.length"
+      *ngIf="
+        rawData.length &&
+        !imagePromptGenerationRunning &&
+        !imageGenerationRunning &&
+        totalLocationsWithImagesCount != totalLocationsCount
+      "
     >
       &nbsp;Generate Art
     </button>
   </div>
-  <h6 *ngIf="!rawData.length && doneLoading" class="ml-3">
-    No locations have been extracted from the book. Run
+</div>
+<h6 *ngIf="!rawData.length && doneLoading" class="ml-3">
+  No locations have been extracted from the book. Run
+  <a
+    style="color: var(--primary-color)"
+    href="#/library/analyze/{{ currentBookId }}"
+    >AI Analysis</a
+  >
+  with location extraction.
+</h6>
+<div class="p-1 m-0 mb-4 mt-4 col-12" *ngIf="aiAnalysisRunning">
+  <p-progressBar
+    [value]="analysisProgressValue"
+    [showValue]="false"
+    [mode]="analysisProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Running
     <a
       style="color: var(--primary-color)"
-      href="#/library/analyze/{{ currentBookId }}"
+      href="#/library/analyze/{{ currentBook.id }}"
       >AI Analysis</a
     >
-    with location extraction.
+    on {{ currentBook.title }}
   </h6>
-  <div [innerHtml]="map" class="w-full justify-content-around flex"></div>
-  <div *ngIf="!listView" class="grid flex pt-4">
+</div>
+<div class="p-1 m-0 mb-4 mt-4 col-12" *ngIf="imageGenerationRunning">
+  <p-progressBar
+    [value]="imageProgressValue"
+    [showValue]="false"
+    [mode]="imageProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Generating location artwork for {{ currentBook.title }}
+  </h6>
+</div>
+<div class="p-1 m-0 mb-4 mt-4 col-12" *ngIf="imagePromptGenerationRunning">
+  <p-progressBar
+    [value]="imagePromptProgressValue"
+    [showValue]="false"
+    [mode]="imagePromptProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Generating artwork prompts for {{ currentBook.title }}
+  </h6>
+</div>
+<div [innerHtml]="map" class="w-full justify-content-around flex"></div>
+
+<div *ngIf="!listView" class="grid flex pt-4">
+  <div
+    *ngFor="let item of rawData"
+    class="col-12 lg:col-6 xl:col-4 mb-4 justify-content-around flex"
+  >
     <div
-      class="col-4 mb-4 justify-content-around flex"
-      *ngFor="let item of rawData"
+      class="card w-full justify-content-around flex grid mr-4 ml-4 mb-4"
+      style="width: fit-content"
+      style="cursor: pointer; position: relative"
     >
-      <div class="card" style="width: fit-content">
-        <img
+      <img
+        [src]="getImageUrl(item.image)"
+        style="width: 100%; pointer-events: none"
+      />
+      <p class="w-full mt-1 mb-0" style="text-align: center">
+        {{ item.location_name }}
+      </p>
+      <div style="position: absolute; top: 38px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="deleteLocation(item.id)"
+        ></button>
+      </div>
+      <div style="position: absolute; top: 88px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-link"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="sendToAlly(item.user_id, item.image)"
           *ngIf="item.image"
-          [src]="getImageUrl(item.image)"
-          style="max-width: 256px"
-        />
-        <p class="w-full mt-1" style="text-align: center; max-width: 256px">
-          {{ item.location_name }}
-        </p>
+        ></button>
+      </div>
+      <div style="position: absolute; top: 138px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-image"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="regenerateArt(item)"
+          *ngIf="item.image"
+        ></button>
       </div>
     </div>
   </div>
-  <div *ngIf="listView" class="m-0 p-0">
-    <div class="card" *ngFor="let item of rawData">
-      <div class="justify-content-around flex">
-        <img
-          *ngIf="item.image"
-          [src]="getImageUrl(item.image)"
-          style="max-width: 512px"
-        />
-      </div>
-      <h5 class="w-full mt-1" style="text-align: center">
-        {{ item.location_name }}
-      </h5>
-      <h6 class="mb-0">Terrain</h6>
-      <p>{{ item.terrain }}</p>
-      <h6 class="mb-0">Structures</h6>
-      <p>{{ item.structures }}</p>
-      <h6 class="mb-0">Image Prompt</h6>
-      <p>{{ item.image_prompt }}</p>
+</div>
+<div *ngIf="listView" class="m-0 p-0">
+  <div class="card" style="position: relative" *ngFor="let item of rawData">
+    <div
+      *ngIf="!imageGenerationRunning && doneLoading"
+      style="position: absolute; top: 22px; right: 20px"
+    >
+      <button
+        pButton
+        type="button"
+        icon="pi pi-trash"
+        class="p-button flex-shrink-0 p-button-outlined mr-2"
+        (click)="deleteLocation(item.id)"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-link"
+        class="p-button flex-shrink-0 p-button-outlined mr-2"
+        (click)="sendToAlly(item.user_id, item.image)"
+        *ngIf="item.image"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-image"
+        class="p-button flex-shrink-0 p-button-outlined"
+        (click)="regenerateArt(item)"
+        *ngIf="item.image"
+      ></button>
     </div>
+    <div class="justify-content-around flex">
+      <img
+        *ngIf="item.image"
+        [src]="getImageUrl(item.image)"
+        style="max-width: 512px; pointer-events: none"
+      />
+    </div>
+    <h5 class="w-full mt-1" style="text-align: center">
+      {{ item.location_name }}
+    </h5>
+    <h6 class="mb-0">Terrain</h6>
+    <p>{{ item.terrain }}</p>
+    <h6 class="mb-0">Structures</h6>
+    <p>{{ item.structures }}</p>
+    <h6 class="mb-0">Image Prompt</h6>
+    <p>{{ item.image_prompt }}</p>
   </div>
 </div>
 <p-confirmPopup key="confirmPopup"></p-confirmPopup>

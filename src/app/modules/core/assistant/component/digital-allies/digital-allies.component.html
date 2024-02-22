@@ -1,111 +1,44 @@
 <div style="position: relative">
-  <div style="position: absolute; right: 78px; top: -56px">
+  <div style="position: absolute; right: 78px; top: -86px">
     <button
       pButton
       type="button"
-      icon="pi pi-list"
+      icon="pi pi-plus"
       class="p-button flex-shrink-0 p-button-outlined mr-2"
-      (click)="toggleListView()"
-      *ngIf="!listView"
-    ></button>
-    <button
-      pButton
-      type="button"
-      icon="pi pi-th-large"
-      class="p-button flex-shrink-0 p-button-outlined mr-2"
-      (click)="toggleListView()"
-      *ngIf="listView"
-    ></button>
-    <button
-      pButton
-      type="button"
-      icon="pi pi-file-edit"
-      class="p-button flex-shrink-0 p-button-outlined"
-      [label]="showEdit ? 'Hide Edit' : 'Show Edit'"
-      (click)="toggleEdit()"
-    ></button>
+      (click)="createAlly()"
+    >
+      &nbsp;Create Ally
+    </button>
   </div>
 </div>
-<div *ngIf="!listView" class="grid flex pt-0">
+<div class="grid flex pt-0 mt-6">
   <div
     *ngFor="let item of digitalAllies"
-    class="col-4 mb-4 justify-content-around flex"
+    class="col-12 lg:col-6 xl:col-4 mb-4 justify-content-around flex"
   >
-    <div
-      class="card"
-      style="width: fit-content"
-      style="cursor: pointer; position: relative"
-      (click)="chatWithAlly(item)"
-    >
-      <img
-        [src]="getImageUrl(item.character_image)"
-        style="max-width: 256px; pointer-events: none"
-      />
-      <p class="w-full mt-1 mb-0" style="text-align: center; max-width: 256px">
+    <div class="card w-full justify-content-around flex grid mr-6 ml-6 mb-6">
+      <div
+        style="cursor: pointer; position: relative"
+        (click)="chatWithAlly($event, item)"
+      >
+        <img
+          [src]="getImageUrl(item.character_image)"
+          style="width: 100%; pointer-events: none"
+        />
+        <div style="position: absolute; top: 16px; right: 4px">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-file-edit"
+            class="p-button flex-shrink-0 p-button-outlined mr-2"
+            style="color: white"
+            (click)="editAlly($event, item)"
+          ></button>
+        </div>
+      </div>
+      <p class="w-full mt-1 mb-0" style="text-align: center">
         {{ item.name }}
       </p>
-      <div style="position: absolute; top: 38px; right: 32px">
-        <button
-          *ngIf="showEdit"
-          pButton
-          type="button"
-          icon="pi pi-file-edit"
-          class="p-button flex-shrink-0 p-button-outlined mr-2"
-          style="color: white"
-          (click)="editAlly(item)"
-        ></button>
-      </div>
     </div>
-  </div>
-</div>
-<div *ngIf="listView" class="grid flex pt-0">
-  <div
-    class="card mr-8 ml-8 mt-6"
-    *ngFor="let item of digitalAllies"
-    style="position: relative"
-  >
-    <div class="justify-content-around flex">
-      <img
-        *ngIf="item.image"
-        [src]="getImageUrl(item.character_image)"
-        style="max-width: 768px"
-      />
-    </div>
-    <div style="position: absolute; top: 22px; right: 20px">
-      <button
-        *ngIf="showEdit"
-        pButton
-        type="button"
-        icon="pi pi-file-edit"
-        class="p-button flex-shrink-0 p-button-outlined"
-      ></button>
-    </div>
-    <h5 class="mb-0 w-full mt-2" style="text-align: center">
-      {{ item.name }}
-    </h5>
-    <h6
-      *ngIf="item.physical_description && item.physical_description.length"
-      class="mb-0 mt-0"
-    >
-      Physical Appearance
-    </h6>
-    <p *ngIf="item.physical_description && item.physical_description.length">
-      {{ item.physical_description }}
-    </p>
-    <h6
-      class="mb-0 mt-0"
-      *ngIf="
-        item.personality_description && item.personality_description.length
-      "
-    >
-      Personality
-    </h6>
-    <p
-      *ngIf="
-        item.personality_description && item.personality_description.length
-      "
-    >
-      {{ item.personality_description }}
-    </p>
   </div>
 </div>

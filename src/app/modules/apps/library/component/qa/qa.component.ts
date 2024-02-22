@@ -20,7 +20,6 @@ export class BookQaComponent implements OnInit, OnDestroy {
   ) {}
 
   quizContentIds: number[] = [];
-  //getResource: string = "fiction_generate_quiz";
   currentBook!: LibraryBook;
   quizCreationRunning: boolean = false;
   stopEnabled: boolean = true;
@@ -34,7 +33,6 @@ export class BookQaComponent implements OnInit, OnDestroy {
   jobsSubscription!: Subscription;
   booksSubscription!: Subscription;
   progressSubscription!: Subscription;
-  analysisSubscription!: Subscription;
   stopSubscription!: Subscription;
   showAllAnswers = false;
   qaSet: any[] = [];
@@ -134,26 +132,6 @@ export class BookQaComponent implements OnInit, OnDestroy {
         }
       }
     );
-
-    /*this.analysisSubscription = this.libraryService.bookAnalysis.subscribe(
-      (analysis: LibraryBookAnalysis[]) => {
-        let qaSet: any[] = [];
-        for (let i = 0; i < analysis.length; i++) {
-          if (this.quizContentIds.includes(analysis[i].content_id)) continue;
-          try {
-            const json = JSON.parse(analysis[i].result);
-            if (!json?.length) continue;
-            qaSet.push({
-              chunk: i + 1,
-              qa_set: json,
-            });
-          } catch (ex) {}
-        }
-        this.qaSet = qaSet;
-        this.doneLoading = true;
-        return;
-      }
-    );*/
 
     this.booksSubscription = this.libraryService.bookList.subscribe(
       (books: LibraryBook[]) => {
@@ -262,7 +240,6 @@ export class BookQaComponent implements OnInit, OnDestroy {
     this.jobsSubscription.unsubscribe();
     this.booksSubscription.unsubscribe();
     this.progressSubscription.unsubscribe();
-    //this.analysisSubscription.unsubscribe();
     this.stopSubscription.unsubscribe();
   }
 }

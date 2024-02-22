@@ -1,5 +1,10 @@
 import { Message } from "./message";
 
+export interface DigitalAllyTone {
+  user: string;
+  assistant: string;
+}
+
 export interface DigitalAlly {
   id: number;
   user_id: number;
@@ -14,6 +19,7 @@ export interface DigitalAlly {
   mirostat_tau?: number;
   mirostat_eta?: number;
   router_config?: string;
+  sort_order: number;
   created_at: Date;
   updated_at: Date;
   name: string;
@@ -24,7 +30,6 @@ export interface DigitalAlly {
   character_image?: string;
   short_description?: string;
   tag_line?: string;
-  personality_description?: string; // remove
-  physical_description?: string; // remove
-  image?: string; // remove
+  conversation_tone?: string;
+  loaded_tones: DigitalAllyTone[];
 }

@@ -37,8 +37,24 @@ export class SocketService {
     return environment.apiUrl;
   }
 
-  getSocketId(): string {
-    return this.socket.id;
+  async getSocketId(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const checkInterval = 100;
+      const timeout = 5000;
+      let elapsedTime = 0;
+
+      const checkSocket = () => {
+        if (this.socket && this.socket.id) {
+          resolve(this.socket.id);
+        } else if (elapsedTime >= timeout) {
+          reject(new Error("Socket initialization timed out."));
+        } else {
+          elapsedTime += checkInterval;
+          setTimeout(checkSocket, checkInterval);
+        }
+      };
+      checkSocket();
+    });
   }
 
   reconnect(): void {

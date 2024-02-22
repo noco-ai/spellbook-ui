@@ -102,7 +102,7 @@
     </div>
   </div>
   <div
-    class="col-12 lg:col-6 xl:col-6 p-0 mb-6 lg:p-6 lg:pr-0 xl:pr-0 xl:pt-4 lg:pt-4"
+    class="col-12 lg:col-6 xl:col-6 p-0 mb-0 lg:mb-6 xl:mb-6 lg:p-6 lg:pr-0 xl:pr-0 xl:pt-4 lg:pt-4"
     style="position: relative"
   >
     <div
@@ -191,7 +191,9 @@
       <th pSortableColumn="text">Prompt</th>
       <th *ngIf="type == 'tts'" pSortableColumn="label">Voice Used</th>
       <th pSortableColumn="filename">Filename</th>
-      <th pSortableColumn="model_used">Model</th>
+      <th pSortableColumn="model_used" class="hidden lg:block xl:block">
+        Model
+      </th>
       <th></th>
     </tr>
   </ng-template>
@@ -203,11 +205,11 @@
       <td *ngIf="type == 'tts'">{{ soundFile.label }}</td>
       <td *ngIf="type == 'tts'">text-to-speech-{{ soundFile.id }}.wav</td>
       <td *ngIf="type != 'tts'">sound-{{ soundFile.id }}.wav</td>
-      <td>
+      <td class="hidden lg:block xl:block">
         {{ soundFile.model_used }}
       </td>
 
-      <td style="width: 180px">
+      <td style="width: 190px">
         <button
           pButton
           type="button"

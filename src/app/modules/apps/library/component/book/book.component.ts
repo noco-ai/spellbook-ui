@@ -13,6 +13,7 @@ import ePub from "epubjs";
 @Component({
   templateUrl: "./book.component.html",
   providers: [ConfirmationService, MessageService],
+  styleUrls: ["./book.component.scss"],
 })
 export class BookComponent implements OnInit, OnDestroy {
   constructor(

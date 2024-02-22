@@ -215,18 +215,18 @@
 <div *ngIf="!listView" class="grid flex pt-4">
   <div
     *ngFor="let item of mergedCharacters"
-    class="col-4 mb-4 justify-content-around flex"
+    class="col-12 lg:col-6 xl:col-4 mb-4 justify-content-around flex"
   >
     <div
-      class="card"
+      class="card w-full justify-content-around flex grid mr-4 ml-4 mb-4"
       style="width: fit-content"
       style="cursor: pointer; position: relative"
     >
       <img
         [src]="getImageUrl(item.image)"
-        style="max-width: 256px; pointer-events: none"
+        style="width: 100%; pointer-events: none"
       />
-      <p class="w-full mt-1 mb-0" style="text-align: center; max-width: 256px">
+      <p class="w-full mt-1 mb-0" style="text-align: center">
         {{ item.name }}
       </p>
       <div style="position: absolute; top: 38px; right: 32px">

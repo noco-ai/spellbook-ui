@@ -16,6 +16,7 @@ import { FileUpload } from "primeng/fileupload";
 
 @Component({
   templateUrl: "./fiction.component.html",
+  styleUrls: ["./fiction.component.scss"],
   providers: [ConfirmationService, MessageService],
 })
 export class FictionComponent implements OnInit, OnDestroy {
@@ -98,5 +99,16 @@ export class FictionComponent implements OnInit, OnDestroy {
         this.libraryService.ingestBook(response.book_id);
       }
     );
+  }
+
+  formatDate(timestamp: number) {
+    var numericTimestamp = Number(timestamp);
+    var date = new Date(numericTimestamp);
+    let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let year = date.getFullYear();
+    let monthStr = month < 10 ? "0" + month : month;
+    let dayStr = day < 10 ? "0" + day : day;
+    return monthStr + "/" + dayStr + "/" + year;
   }
 }

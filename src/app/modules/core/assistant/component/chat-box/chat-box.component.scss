@@ -74,6 +74,16 @@
   width: 100%;
 }
 
+.message-sibling {
+  span {
+    font-size: 0.8em;
+  }
+
+  b {
+    cursor: pointer;
+  }
+}
+
 .message-header {
   display: flex;
   justify-content: space-between;

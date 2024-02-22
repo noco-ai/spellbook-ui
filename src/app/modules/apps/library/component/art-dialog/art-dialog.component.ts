@@ -34,6 +34,7 @@ export class BookArtDialogComponent implements OnInit, OnDestroy {
   @Input() regeneratePrompt: string = "";
   @Input() regenerateId: number = 0;
   @Output() onHide = new EventEmitter<void>();
+  @Output() onSubmit = new EventEmitter<void>();
 
   styleOptions = [
     {
@@ -153,6 +154,7 @@ export class BookArtDialogComponent implements OnInit, OnDestroy {
         this.resourceType
       );
     }
+    this.onSubmit.emit();
     this.visible = false;
   }
 }

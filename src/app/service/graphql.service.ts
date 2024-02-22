@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { Observable, catchError, from, switchMap, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { SocketService } from "./sockets.service";
 
@@ -10,24 +10,34 @@ import { SocketService } from "./sockets.service";
 export class GraphqlService {
   private url = `${environment.apiUrl}graphql`;
   private token!: string;
+  socketId!: string;
 
   constructor(private http: HttpClient, private socketService: SocketService) {}
 
   // function to make a graphql call
   sendQuery(query: string, variables?: any): Observable<any> {
-    const httpOptions = {
-      headers: new HttpHeaders({
-        "Content-Type": "application/json",
-        Authorization: this.getToken(),
-        "Socket-Id": this.socketService.getSocketId(),
-      }),
-    };
+    return from(this.socketService.getSocketId()).pipe(
+      switchMap((socketId) => {
+        const httpOptions = {
+          headers: new HttpHeaders({
+            "Content-Type": "application/json",
+            Authorization: this.getToken(),
+            "Socket-Id": socketId,
+          }),
+        };
 
-    const body = {
-      query: query,
-      variables: variables,
-    };
-    return this.http.post<any>(this.url, body, httpOptions);
+        const body = {
+          query: query,
+          variables: variables,
+        };
+
+        return this.http.post<any>(this.url, body, httpOptions);
+      }),
+      catchError((error) => {
+        console.error("Error getting socket ID:", error);
+        return throwError(error);
+      })
+    );
   }
 
   private getToken(): string {

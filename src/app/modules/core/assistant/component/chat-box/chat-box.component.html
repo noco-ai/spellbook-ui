@@ -1,3 +1,5 @@
+<div id="chatplayback" style="display: none"></div>
+<div id="background"></div>
 <p-confirmPopup key="confirmPopup"></p-confirmPopup>
 <p-toast></p-toast>
 <p-dialog
@@ -23,7 +25,13 @@
       [options]="modelOptions"
       [(ngModel)]="conversation.use_model"
     ></p-dropdown>
-    <label class="mt-3">Router Settings</label>
+    <label class="mt-3">Microphone</label>
+    <p-dropdown
+      class="selectinput w-full"
+      [options]="micOptions"
+      [(ngModel)]="useMicrophone"
+    ></p-dropdown>
+    <label class="mt-3">Conversation Settings</label>
     <p-multiSelect
       class="selectinput w-full"
       [options]="routerConfigOptions"
@@ -173,7 +181,14 @@
   >
     <div class="relative flex align-items-center mr-3">
       <img
+        *ngIf="!ally"
         src="{{ baseIconUrl }}asset/spellbook/core/ai-icon.jpeg"
+        alt="{{ conversation.topic }}"
+        class="w-4rem h-4rem border-circle shadow-4"
+      />
+      <img
+        *ngIf="ally"
+        src="{{ baseIconUrl }}{{ ally.character_image }}"
         alt="{{ conversation.topic }}"
         class="w-4rem h-4rem border-circle shadow-4"
       />
@@ -182,7 +197,7 @@
       <span class="text-900 font-semibold block">{{ conversation.topic }}</span>
       <p-button
         (click)="editConversation(conversation)"
-        label="Edit"
+        label="Settings"
         styleClass="p-button-link"
         [style]="{ padding: '0px' }"
       ></p-button>
@@ -195,7 +210,7 @@
         *ngIf="conversation.id"
         type="button"
         icon="pi pi-trash"
-        class="p-button-outlined p-button-secondary mr-3"
+        class="p-button-outlined p-button-secondary mr-2"
       ></button>
       <button
         pButton
@@ -285,6 +300,12 @@
             </div>
           </div>
 
+          <chat-uploaded-files
+            *ngIf="message.files.length"
+            [fileList]="message.filesList"
+            (playSound)="playGeneratedSound($event)"
+            (stopSound)="stopGeneratedSound()"
+          ></chat-uploaded-files>
           <p *ngIf="message.content.length" class="pre-line">
             {{ message.content }}
           </p>
@@ -324,6 +345,34 @@
               shape="circle"
             ></p-avatar>
           </p-avatarGroup>
+          <div *ngIf="message.siblings.length > 1" class="message-sibling">
+            <b
+              (click)="
+                navigateToSibling(
+                  message.id,
+                  message.parent_id,
+                  message.siblings,
+                  'previous'
+                )
+              "
+              >&lt;&nbsp;</b
+            >
+            <span
+              >{{ getCurrentPosition(message.id, message.siblings) }} of
+              {{ message.siblings.length }}</span
+            >
+            <b
+              (click)="
+                navigateToSibling(
+                  message.id,
+                  message.parent_id,
+                  message.siblings,
+                  'next'
+                )
+              "
+              >&nbsp;&gt;</b
+            >
+          </div>
           {{ message.shortcuts }}
         </div>
         <div class="col">
@@ -354,7 +403,7 @@
                 icon="pi pi-trash"
                 class="p-button-rounded p-button-text"
               ></button>
-              <!--<button
+              <button
                 *ngIf="canEdit"
                 (click)="startEdit(message, editableDiv)"
                 pButton
@@ -362,11 +411,12 @@
                 type="button"
                 icon="pi pi-file-edit"
                 class="p-button-rounded p-button-text"
-              ></button>-->
+              ></button>
             </div>
           </div>
           <div class="w-full">
             <chat-uploaded-files
+              *ngIf="message.files.length"
               [fileList]="message.filesList"
             ></chat-uploaded-files>
             <p
@@ -381,23 +431,23 @@
           [ngClass]="{ hidden: !message.is_editing }"
           class="w-full message-buttons pt-2"
         >
-          <!--<button
+          <button
             pButton
             pRipple
             type="button"
             icon="pi pi-refresh"
             label="Regenerate"
             class="p-button-outlined"
-            (click)="startRegenerate(message, editableDiv)"
-          ></button>-->
-          <!--<button
+            (click)="startRegenerate(message, editableDiv, i)"
+          ></button>
+          <button
             pButton
             pRipple
             type="button"
             label="Cancel"
             (click)="cancelEdit(message, editableDiv)"
             class="p-button-outlined ml-3 p-button-secondary"
-          ></button>-->
+          ></button>
         </div>
       </div>
     </div>
@@ -442,11 +492,20 @@
 
     <div class="flex w-full sm:w-auto">
       <button
-        *ngIf="asrModels.length"
+        *ngIf="asrModels.length && !isRecording"
         pButton
         pRipple
         icon="pi pi-microphone"
-        [disabled]="!canEdit || isRecording"
+        [disabled]="!canEdit"
+        class="mr-2 p-button-secondary p-button-outlined"
+        (click)="startRecord()"
+      ></button>
+      <button
+        *ngIf="asrModels.length && isRecording"
+        pButton
+        pRipple
+        icon="pi pi-stop"
+        [disabled]="!canEdit"
         class="mr-2 p-button-secondary p-button-outlined"
         (click)="startRecord()"
       ></button>
