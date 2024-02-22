@@ -5,11 +5,16 @@ open large language models.
 
 ![UI demo](https://github.com/noco-ai/spellbook-docker/blob/master/ui-demo.gif)
 
+## Stack Documentation
+
+- https://github.com/noco-ai/spellbook-docker/wiki
+- The wiki for the docker project contains comprehensive documentation for the UI that uses Elemental Golem to serve AI models.
+
 ## Licensing Note
 
-Spellbook UI is based of a UI framework I purchased that has a restrictive license when it comes to commercial use and open source projects. They
-require one commercial license be purchased for every end product. To comply with their license I am releasing this code with the CC BY-NC 4.0 license.
-If you are interested in using this UI for commercial purchases a license can be obtained by contacting admin@magegpt.com.
+Spellbook UI is based of a Angular framework that has a restrictive license when it comes to commercial use and open source projects. They
+require that one commercial license is purchased for every end use of the product. To comply with their license I am releasing this code with the CC BY-NC 4.0 license.
+If you are interested in using this UI for commercial purposes a license can be obtained by contacting admin@magegpt.com. The project is free to use for personal use.
 
 ## Features
 
