@@ -22,6 +22,7 @@ export class DigitalAlliesComponent implements OnInit, OnDestroy {
     this.allySubscription = this.chatService.digitalAllies.subscribe(
       (allies: DigitalAlly[]) => {
         this.digitalAllies = allies;
+        if (!allies.length) window.location.href = `#/ai-assistant/edit-ally/0`;
       }
     );
     this.chatService.getDigitalAllies();
