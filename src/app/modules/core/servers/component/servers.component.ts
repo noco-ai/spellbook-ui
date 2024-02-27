@@ -11,6 +11,7 @@ import { ConfirmationService, MessageService } from "primeng/api";
 import { Server } from "../api/server";
 import { ServersService } from "../service/servers.service";
 import { SocketService } from "src/app/service/sockets.service";
+import { GalleriaThumbnails } from "primeng/galleria";
 
 interface expandedRows {
   [key: string]: boolean;
@@ -195,6 +196,9 @@ export class GolemComponent implements OnInit, OnDestroy {
   }
 
   refreshServers() {
+    this.servers = [];
+    this.skills = [];
+    this.uses = [];
     this.serverService.getServers();
   }
 

@@ -173,6 +173,8 @@ export class OnlineSkills implements OnInit, OnDestroy {
   }
 
   refreshServers() {
+    this.servers = [];
+    this.skills = [];
     this.serverService.getServers();
   }
 
