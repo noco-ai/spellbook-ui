@@ -95,6 +95,7 @@ export class ServersService {
   }
 
   getServers() {
+    console.log("get servers");
     this.socketService.send("command", {
       command: "worker_report",
     });

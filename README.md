@@ -8,7 +8,7 @@ open large language models.
 ## Stack Documentation
 
 - https://github.com/noco-ai/spellbook-docker/wiki
-- The wiki for the docker project contains comprehensive documentation for the UI that uses Elemental Golem to serve AI models.
+- The wiki for the docker project contains comprehensive documentation for the UI.
 
 ## Licensing Note
 
@@ -33,8 +33,8 @@ See https://github.com/noco-ai/spellbook-docker for installing the entire Spell 
 
 ### Dependencies
 
-- Arcane Bridge >= 0.1.0
-- Elemental Golem >= 0.1.0
+- Arcane Bridge >= 0.3.0
+- Elemental Golem >= 0.3.0
 
 ### environments/environment.ts
 
