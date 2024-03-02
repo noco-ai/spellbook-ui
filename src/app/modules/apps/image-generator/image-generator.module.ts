@@ -12,6 +12,7 @@ import { ImageGeneratorRoutingModule } from "./image-generator.routing.module";
 import { AccordionModule } from "primeng/accordion";
 import { GalleriaModule } from "primeng/galleria";
 import { ProgressBarModule } from "primeng/progressbar";
+import { InputSwitch, InputSwitchModule } from "primeng/inputswitch";
 
 @NgModule({
   imports: [
@@ -27,6 +28,7 @@ import { ProgressBarModule } from "primeng/progressbar";
     SliderModule,
     GalleriaModule,
     InputTextModule,
+    InputSwitchModule,
   ],
   declarations: [ImageGeneratorComponent],
 })

@@ -1,0 +1,11 @@
+.selectinput ::ng-deep .p-dropdown {
+  width: 100%;
+}
+
+.selectinput ::ng-deep .p-multiselect {
+  width: 100%;
+}
+
+.selected-img {
+  border: 2px solid var(--primary-color);
+}

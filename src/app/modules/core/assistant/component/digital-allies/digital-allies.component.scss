@@ -1,0 +1,25 @@
+.conversation-list {
+  div:first-of-type {
+    border-radius: 12px 12px 0px 0px !important;
+  }
+
+  div {
+    border-radius: 0px 0px 0px 0px;
+  }
+
+  div:last-of-type {
+    border-radius: 0px 0px 12px 12px !important;
+  }
+
+  div:only-child {
+    border-radius: 12px 12px 12px 12px !important;
+  }
+}
+
+.img-large {
+  max-width: 256px;
+}
+
+.img {
+  max-width: 100%;
+}

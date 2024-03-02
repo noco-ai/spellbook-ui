@@ -1,0 +1,47 @@
+<p-dialog
+  header="Use Model"
+  [(visible)]="visible"
+  (onHide)="onHideButton()"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-0 pr-4 pl-3">
+    <ng-container *ngFor="let option of modelOptions">
+      <div class="field-radiobutton w-full">
+        <p-radioButton
+          name="agent"
+          [value]="option.value"
+          [(ngModel)]="selectedModel"
+        ></p-radioButton>
+        <label (click)="selectOption(option.value)">{{ option.label }}</label>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="showEmbeddings">
+      <h6>Text Embedding</h6>
+      <ng-container *ngFor="let option of embeddingOptions">
+        <div class="field-radiobutton w-full">
+          <p-radioButton
+            name="embedding"
+            [value]="option.value"
+            [(ngModel)]="selectedEmbedding"
+          ></p-radioButton>
+          <label (click)="selectEmbeddingOption(option.value)">{{
+            option.label
+          }}</label>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-book"
+      label="Run"
+      class="p-button-outlined"
+      [disabled]="!selectedModel || (!selectedEmbedding && showEmbeddings)"
+      (click)="submit()"
+    ></button>
+  </ng-template>
+</p-dialog>

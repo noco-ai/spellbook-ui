@@ -1,0 +1,425 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-toast></p-toast>
+<app-art-dialog
+  [book]="currentBook"
+  [resourceType]="'characters'"
+  [visible]="showGenerateArtworkDialog"
+  (onHide)="hideImageDialog()"
+  [regenerate]="regeneratePrompt"
+  [regenerateId]="regenerateId"
+></app-art-dialog>
+<app-model-select-dialog
+  [visible]="showModelDialog"
+  (onSubmit)="refineCharactersSubmit($event)"
+  (onHide)="hideModelDialog()"
+  [showEmbeddings]="true"
+></app-model-select-dialog>
+<p-dialog
+  header="Edit Character"
+  [(visible)]="editDialogVisible"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-3 pr-4">
+    <label class="">Merge With</label>
+    <p-dropdown
+      class="selectinput w-full"
+      [options]="charactersOptions"
+      [(ngModel)]="selectedMerge"
+    ></p-dropdown>
+    <label class="mt-3">Character Name</label>
+    <input
+      class="p-inputtext p-component p-element w-full"
+      type="text"
+      pInputText
+      [(ngModel)]="editingCharacter.name"
+      [disabled]="selectedMerge != 0"
+    />
+    <label class="mt-3">Physical Appearance</label>
+    <textarea
+      rows="5"
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      [(ngModel)]="editingCharacter.physical_description"
+      [disabled]="selectedMerge != 0"
+      pInputTextarea
+    ></textarea>
+    <label class="mt-3">Personality</label>
+    <textarea
+      rows="5"
+      cols="30"
+      class="p-inputtext p-component p-element w-full"
+      [(ngModel)]="editingCharacter.personality_description"
+      [disabled]="selectedMerge != 0"
+      pInputTextarea
+    ></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-user"
+      (click)="submitEditCharacter()"
+      label="Update"
+      [label]="selectedMerge ? 'Merge' : 'Update'"
+      class="p-button-outlined"
+    ></button>
+  </ng-template>
+</p-dialog>
+<div class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-list"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="toggleListView()"
+      *ngIf="!listView && mergedCharacters.length"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-th-large"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="toggleListView()"
+      *ngIf="listView && mergedCharacters.length && withImagesCount"
+    ></button>
+    <button
+      *ngIf="
+        mergedCharacters.length &&
+        !rawCharacters.length &&
+        !imageGenerationRunning &&
+        !imagePromptGenerationRunning &&
+        totalMergedCount != withImagesCount
+      "
+      pButton
+      type="button"
+      icon="pi pi-image"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="generateArtwork(currentBook)"
+      [disabled]="!imageGenerationEnabled"
+    >
+      &nbsp;Generate Art
+    </button>
+    <button
+      *ngIf="imageGenerationRunning || imagePromptGenerationRunning"
+      pButton
+      type="button"
+      icon="pi pi-stop"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="stopImageGeneration(currentBook)"
+      [disabled]="!stopImageGenerationEnabled"
+    >
+      &nbsp;Stop Generation
+    </button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-link"
+      class="p-button flex-shrink-0 p-button-outlined mr-3"
+      (click)="refineCharacters(currentBook)"
+      [disabled]="jobsRunning"
+      *ngIf="
+        !mergeRunning &&
+        !mergedCharacters.length &&
+        rawCharacters.length &&
+        doneLoading
+      "
+    >
+      &nbsp;Refine & Merge
+    </button>
+    <button
+      *ngIf="
+        mergeRunning &&
+        (mergedCharacters.length > 10 || !mergedCharacters.length) &&
+        doneLoading
+      "
+      pButton
+      type="button"
+      icon="pi pi-stop"
+      class="p-button flex-shrink-0 p-button-outlined mr-3"
+      (click)="stopRefineCharacters(currentBook)"
+      [disabled]="!stopMergeEnabled"
+    >
+      &nbsp;Stop Refinement
+    </button>
+  </div>
+  <h6
+    *ngIf="
+      !mergedCharacters.length &&
+      !rawCharacters.length &&
+      doneLoading &&
+      !jobsRunning
+    "
+    class="ml-3"
+  >
+    No characters have been extracted from the book. Run
+    <a
+      style="color: var(--primary-color)"
+      href="#/library/analyze/{{ currentBook.id }}"
+      >AI Analysis</a
+    >
+    with characters extraction.
+  </h6>
+</div>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="aiAnalysisRunning">
+  <p-progressBar
+    [value]="analysisProgressValue"
+    [showValue]="false"
+    [mode]="analysisProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Running
+    <a
+      style="color: var(--primary-color)"
+      href="#/library/analyze/{{ currentBook.id }}"
+      >AI Analysis</a
+    >
+    on {{ currentBook.title }}
+  </h6>
+</div>
+<div
+  class="p-1 m-0 mb-4 mt-4"
+  *ngIf="mergeRunning && mergedCharacters.length > 10"
+>
+  <p-progressBar
+    [value]="progressValue"
+    [showValue]="false"
+    [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Merging and refining characters from {{ currentBook.title }}
+  </h6>
+</div>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="imageGenerationRunning">
+  <p-progressBar
+    [value]="imageProgressValue"
+    [showValue]="false"
+    [mode]="imageProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Generating character artwork for {{ currentBook.title }}
+  </h6>
+</div>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="imagePromptGenerationRunning">
+  <p-progressBar
+    [value]="imagePromptProgressValue"
+    [showValue]="false"
+    [mode]="imagePromptProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Generating artwork prompts for {{ currentBook.title }}
+  </h6>
+</div>
+<div *ngIf="!listView" class="grid flex pt-4">
+  <div
+    *ngFor="let item of mergedCharacters"
+    class="col-12 lg:col-6 xl:col-4 mb-4 justify-content-around flex"
+  >
+    <div
+      class="card w-full justify-content-around flex grid mr-4 ml-4 mb-4"
+      style="width: fit-content"
+      style="cursor: pointer; position: relative"
+    >
+      <img
+        [src]="getImageUrl(item.image)"
+        style="width: 100%; pointer-events: none"
+      />
+      <p class="w-full mt-1 mb-0" style="text-align: center">
+        {{ item.name }}
+      </p>
+      <div style="position: absolute; top: 38px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-edit"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="editCharacter(item)"
+        ></button>
+      </div>
+      <div style="position: absolute; top: 88px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="deleteRefinedCharacter(item.id)"
+        ></button>
+      </div>
+      <div style="position: absolute; top: 138px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-link"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="convertToAlly(item.id)"
+        ></button>
+      </div>
+      <div style="position: absolute; top: 188px; right: 32px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-image"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          style="color: white"
+          (click)="regenerateCharacterArt(item)"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="listView && mergedCharacters.length" class="m-0 p-0 mb-6 mt-3">
+  <div
+    class="card"
+    *ngFor="let item of mergedCharacters"
+    style="position: relative"
+  >
+    <div class="justify-content-around flex">
+      <img
+        *ngIf="item.image"
+        [src]="getImageUrl(item.image)"
+        style="max-width: 512px; pointer-events: none"
+      />
+    </div>
+    <div
+      *ngIf="!rawCharacters.length && !imageGenerationRunning && doneLoading"
+      style="position: absolute; top: 22px; right: 20px"
+    >
+      <button
+        pButton
+        type="button"
+        icon="pi pi-trash"
+        class="p-button flex-shrink-0 p-button-outlined mr-2"
+        (click)="deleteRefinedCharacter(item.id)"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-file-edit"
+        class="p-button flex-shrink-0 p-button-outlined"
+        (click)="editCharacter(item)"
+      ></button>
+    </div>
+    <div
+      *ngIf="!rawCharacters.length && !imageGenerationRunning && doneLoading"
+      style="position: absolute; top: 76px; right: 20px"
+    >
+      <button
+        pButton
+        type="button"
+        icon="pi pi-link"
+        class="p-button flex-shrink-0 p-button-outlined mr-2"
+        (click)="convertToAlly(item.id)"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-image"
+        class="p-button flex-shrink-0 p-button-outlined"
+        (click)="regenerateCharacterArt(item)"
+      ></button>
+    </div>
+    <h5 class="mb-0 w-full mt-2" style="text-align: center">
+      {{ item.name }}
+    </h5>
+    <h6
+      *ngIf="item.physical_description && item.physical_description.length"
+      class="mb-0 mt-0"
+    >
+      Physical Appearance
+    </h6>
+    <p *ngIf="item.physical_description && item.physical_description.length">
+      {{ item.physical_description }}
+    </p>
+    <h6
+      class="mb-0 mt-0"
+      *ngIf="
+        item.personality_description && item.personality_description.length
+      "
+    >
+      Personality
+    </h6>
+    <p
+      *ngIf="
+        item.personality_description && item.personality_description.length
+      "
+    >
+      {{ item.personality_description }}
+    </p>
+    <h6 class="mb-0 mt-0" *ngIf="item.image_prompt && item.image_prompt.length">
+      Image Prompt
+    </h6>
+    <p *ngIf="item.image_prompt && item.image_prompt.length">
+      {{ item.image_prompt }}
+    </p>
+  </div>
+</div>
+<div class="m-0 p-0" *ngIf="rawCharacters.length">
+  <div
+    *ngIf="mergedCharacters.length"
+    class="mb-3 justify-content-between flex"
+  >
+    <h4
+      class="pt-2 mb-0"
+      style="font-family: 'game-pixel'; color: var(--primary-color)"
+    >
+      Raw Characters
+    </h4>
+    <div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-link"
+        class="p-button flex-shrink-0 p-button-outlined mr-3"
+        (click)="refineCharacters(currentBook)"
+        *ngIf="!mergeRunning"
+      >
+        &nbsp;Refine & Merge
+      </button>
+      <button
+        *ngIf="mergeRunning"
+        pButton
+        type="button"
+        icon="pi pi-stop"
+        class="p-button flex-shrink-0 p-button-outlined mr-3"
+        (click)="stopRefineCharacters(currentBook)"
+        [disabled]="!stopMergeEnabled"
+      >
+        &nbsp;Stop Refinement
+      </button>
+    </div>
+  </div>
+  <div class="p-1 m-0 mb-4 mt-4" *ngIf="mergeRunning">
+    <p-progressBar
+      [value]="progressValue"
+      [showValue]="false"
+      [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+    ></p-progressBar>
+    <h6 style="text-align: center" class="w-full">
+      Merging and refining characters from {{ currentBook.title }}
+    </h6>
+  </div>
+  <div class="card" *ngFor="let item of rawCharacters">
+    <div class="justify-content-between flex w-full mt-1">
+      <h5 class="mb-0">
+        {{ titleCase(item[0].name) }}
+      </h5>
+    </div>
+    <h6 *ngIf="lengthCheck(item, 'physical_description')" class="mb-0">
+      Physical Appearance
+    </h6>
+    <p *ngIf="lengthCheck(item, 'physical_description')">
+      {{ mergeValuesByKey(item, "physical_description") }}
+    </p>
+    <h6 class="mb-0" *ngIf="lengthCheck(item, 'personality_description')">
+      Personality
+    </h6>
+    <p *ngIf="lengthCheck(item, 'personality_description')">
+      {{ mergeValuesByKey(item, "personality_description") }}
+    </p>
+  </div>
+</div>

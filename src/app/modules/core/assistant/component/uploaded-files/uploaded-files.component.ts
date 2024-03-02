@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from "@angular/core";
+import { Component, OnInit, Input, Output, EventEmitter } from "@angular/core";
 import { AssistantService } from "../../service/assistant.service";
 import { SocketService } from "src/app/service/sockets.service";
 
@@ -10,9 +10,15 @@ import { SocketService } from "src/app/service/sockets.service";
 export class UploadedFilesComponent implements OnInit {
   baseUrl: string = "";
   @Input() fileList: string[] = [];
+  @Output() playSound = new EventEmitter<string>();
+  @Output() stopSound = new EventEmitter<void>();
   ngOnInit(): void {}
-  constructor(private chatService: AssistantService, socketService: SocketService) {
+  constructor(
+    private chatService: AssistantService,
+    socketService: SocketService
+  ) {
     this.baseUrl = socketService.getBaseUrl();
+    console.log(this.fileList);
   }
 
   getFileType(fileName: string): "image" | "audio" | "other" {
@@ -36,5 +42,13 @@ export class UploadedFilesComponent implements OnInit {
   getFilenameFromPath(path: string): string {
     const segments = path.split(/[/\\]/);
     return segments.pop() || "";
+  }
+
+  play(fileName: string) {
+    this.playSound.emit(fileName);
+  }
+
+  stop() {
+    this.stopSound.emit();
   }
 }

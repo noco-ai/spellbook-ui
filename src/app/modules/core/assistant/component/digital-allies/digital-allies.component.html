@@ -1,0 +1,44 @@
+<div style="position: relative">
+  <div style="position: absolute; right: 78px; top: -86px">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-plus"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="createAlly()"
+    >
+      &nbsp;Create Ally
+    </button>
+  </div>
+</div>
+<div class="grid flex pt-0 mt-6">
+  <div
+    *ngFor="let item of digitalAllies"
+    class="col-12 lg:col-6 xl:col-4 mb-4 justify-content-around flex"
+  >
+    <div class="card w-full justify-content-around flex grid mr-6 ml-6 mb-6">
+      <div
+        style="cursor: pointer; position: relative"
+        (click)="chatWithAlly($event, item)"
+      >
+        <img
+          [src]="getImageUrl(item.character_image)"
+          style="width: 100%; pointer-events: none"
+        />
+        <div style="position: absolute; top: 16px; right: 4px">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-file-edit"
+            class="p-button flex-shrink-0 p-button-outlined mr-2"
+            style="color: white"
+            (click)="editAlly($event, item)"
+          ></button>
+        </div>
+      </div>
+      <p class="w-full mt-1 mb-0" style="text-align: center">
+        {{ item.name }}
+      </p>
+    </div>
+  </div>
+</div>

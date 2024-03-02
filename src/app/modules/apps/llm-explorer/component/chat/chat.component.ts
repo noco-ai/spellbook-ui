@@ -326,9 +326,52 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.setsSubscription.unsubscribe();
     this.outputSubscription.unsubscribe();
     this.outputFragmentSubscription.unsubscribe();
+    document.removeEventListener('keydown', this.handleKeyPress.bind(this));
+  }
+
+  handleKeyPress(event: KeyboardEvent) {
+    if (event.ctrlKey && event.shiftKey && event.key === 'V') {
+      this.copyPayload();
+    }
+  }
+
+  copyPayload() {
+    const messagePairs = [];
+    for (let i = 0; i < this.examplePairs.length; i++) {
+      if (this.examplePairs[i].exclude === "true") continue;
+      messagePairs.push({ role: "user", content: this.examplePairs[i].user });
+      messagePairs.push({
+        role: "assistant",
+        content: this.examplePairs[i].assistant,
+      });
+    }
+    const messages = [
+      { role: "system", content: this.systemMessage },
+      ...messagePairs
+    ];
+
+    const payload = {
+      temperature: this.temperature,
+      top_k: this.topK,
+      top_p: this.topP,
+      min_p: this.minP,
+      seed: Number(this.seed),
+      mirostat: this.mirostat,
+      mirostat_eta: this.mirostatEta,
+      mirostat_tau: this.mirostatTau,
+      start_response: "",
+      stream: false,
+      debug: true,
+      messages: messages
+    };
+
+    const json = JSON.stringify(payload, null, 2);
+    navigator.clipboard.writeText(json);
   }
 
   ngOnInit(): void {
+    document.addEventListener('keydown', this.handleKeyPress.bind(this));
+
     this.onlineModelsSubscription =
       this.llmService.onlineLanguageModels.subscribe(
         (models: ModelOptions[]) => {

@@ -1,11 +1,13 @@
 <div class="flex flex-column md:flex-row gap-5" style="min-height: 81vh">
-    <div class="flex-1 card p-0">
-        <app-chat-box
-            (sidebarVisibilityChange)="showSidebar($event)"
-            [conversation]="activeConversation"
-        ></app-chat-box>
-    </div>
+  <div class="flex-1 card p-0">
+    <app-chat-box
+      (sidebarVisibilityChange)="showSidebar($event)"
+      [conversation]="activeConversation"
+      [ally]="activeAlly"
+      [wakeWords]="wakeWords"
+    ></app-chat-box>
+  </div>
 </div>
 <p-sidebar [(visible)]="sidebarVisible" position="right" [baseZIndex]="10000">
-    <app-chat-sidebar></app-chat-sidebar>
+  <app-chat-sidebar [ally]="activeAlly"></app-chat-sidebar>
 </p-sidebar>

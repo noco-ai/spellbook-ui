@@ -1,0 +1,78 @@
+<p-fileUpload
+  #fileUploader
+  name="demo[]"
+  url="./upload.php"
+  accept=".epub"
+  (onSelect)="onSelect($event)"
+  (onClear)="onClear()"
+  [multiple]="false"
+  [maxFileSize]="5000000"
+  (uploadHandler)="uploadFile($event)"
+  [customUpload]="true"
+>
+  <ng-template pTemplate="content">
+    <ul *ngIf="uploadedFiles.length">
+      <li *ngFor="let file of uploadedFiles">
+        {{ file.name }} - {{ file.size }} bytes
+      </li>
+    </ul>
+    <p *ngIf="showMessage">Select E-PUB file to upload.</p>
+  </ng-template>
+</p-fileUpload>
+<p-toast></p-toast>
+<p-table
+  [value]="books"
+  scrollDirection="both"
+  [scrollable]="true"
+  styleClass="mt-3"
+  responsiveLayout="scroll"
+  sortField="created_at"
+  [sortOrder]="-1"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 100px" pSortableColumn="title">Cover</th>
+      <th pSortableColumn="title">Name</th>
+      <th pSortableColumn="author">Author</th>
+      <th class="font-bold" pSortableColumn="created_at">Added On</th>
+      <th style="width: 140px"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-book>
+    <tr>
+      <td style="width: 100px" class="font-bold">
+        <img
+          style="max-height: 160px; cursor: pointer"
+          [src]="getBookCover(book)"
+          (click)="viewBook(book)"
+        />
+      </td>
+      <td class="font-bold">
+        {{ book.title }}
+      </td>
+      <td class="font-bold">
+        {{ book.author }}
+      </td>
+      <td class="font-bold">
+        {{ formatDate(book.created_at) }}
+      </td>
+      <td style="width: 140px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button flex-shrink-0 p-button-outlined mr-2 mb-2 lg:mb-0 xl:mb-0"
+          (click)="deleteBook(book)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-book"
+          class="p-button flex-shrink-0 p-button-outlined mr-2 mt-0 mb-2 lg:mb-0 xl:mb-0"
+          (click)="viewBook(book)"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>

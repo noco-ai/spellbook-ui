@@ -2,6 +2,7 @@ import { Message } from "./message";
 
 export interface Conversation {
   id: number;
+  ally_id: number;
   is_private: boolean;
   is_shared: boolean;
   topic: string;
@@ -14,6 +15,7 @@ export interface Conversation {
   mirostat_tau: number;
   temperature: number;
   seed: number | null;
+  first_message_id: number;
   system_message: string | null;
   icon: string;
   messages: Message[];

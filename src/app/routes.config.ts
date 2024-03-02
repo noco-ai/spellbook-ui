@@ -91,6 +91,22 @@ export const routes = [
         data: { breadcrumb: "User Manager" },
         canActivate: [UserAccessGuard],
       },
+      {
+        path: "library",
+        loadChildren: () =>
+          import("src/app/modules/apps/library/library.module").then(
+            (m) => m["LibraryModule"]
+          ),
+        data: { breadcrumb: "Book Library" },
+      },
+      {
+        path: "sound-studio",
+        loadChildren: () =>
+          import("src/app/modules/apps/sound-studio/sound-studio.module").then(
+            (m) => m["SoundStudioModule"]
+          ),
+        data: { breadcrumb: "Sound Studio" },
+      },
     ],
   },
 ];

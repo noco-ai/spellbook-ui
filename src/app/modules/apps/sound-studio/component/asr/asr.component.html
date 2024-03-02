@@ -1,0 +1,221 @@
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-dialog
+  header="Voice Label"
+  [(visible)]="showUpdateVoiceLabel"
+  [modal]="true"
+  showEffect="fade"
+  [style]="{ width: '20vw' }"
+  [breakpoints]="{ '960px': '75vw' }"
+>
+  <div class="grid formgrid p-3 pr-4 pt-0">
+    <div class="col-12 p-0">
+      <input
+        class="w-full"
+        type="text"
+        pInputText
+        placeholder="Voice Label"
+        [(ngModel)]="newVoiceLabel"
+      />
+    </div>
+    <div class="col-12 p-0 flex justify-content-between">
+      <div></div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-save"
+        class="p-button-secondary flex-shrink-0 mt-3"
+        (click)="updateVoiceLabel()"
+      >
+        &nbsp;Save
+      </button>
+    </div>
+  </div>
+</p-dialog>
+<div class="grid m-1 mb-8">
+  <div class="col-12 xl:col-6 m-0 p-0">
+    <p-fileUpload
+      #fileUploader
+      name="asrfiles[]"
+      accept=".wav,.webm"
+      (onSelect)="onSelect($event)"
+      (onClear)="onClear()"
+      [multiple]="false"
+      [maxFileSize]="5000000"
+      (uploadHandler)="uploadFile($event)"
+      [customUpload]="true"
+    >
+      <ng-template pTemplate="content">
+        <ul *ngIf="uploadedFiles.length">
+          <li *ngFor="let file of uploadedFiles">
+            {{ file.name }} - {{ file.size }} bytes
+          </li>
+        </ul>
+        <p *ngIf="showMessage" class="mb-4 mt-4">
+          Select sound file to upload for ASR analysis.
+        </p>
+      </ng-template>
+    </p-fileUpload>
+  </div>
+  <div class="col-12 xl:col-6 p-0 pl-0 xl:pl-6 pb-4" style="position: relative">
+    <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
+      <div class="card p-0 pl-4 pr-4 m-0 mt-4 xl:mt-0" id="asrplay"></div>
+    </div>
+    <div class="mt-4">
+      <div class="p-0 m-0 justify-content-between flex">
+        <div class="m-0 p-0">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button p-button-secondary flex-shrink-0 p-button-outlined mr-2"
+            [disabled]="!activeSoundFile || isPlaying"
+            (click)="deleteSoundFile(activeSoundFile)"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-download"
+            class="p-button p-button-secondary flex-shrink-0 p-button-outlined mr-2"
+            [disabled]="!activeSoundFile || isPlaying"
+            (click)="downloadSoundFile(activeSoundFile)"
+          ></button>
+        </div>
+        <div class="m-0 p-0">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pause"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            [disabled]="!activeSoundFile || !isPlaying || isPaused"
+            (click)="pause()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-play"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            [disabled]="!activeSoundFile || (isPlaying && !isPaused)"
+            (click)="play()"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 xl:col-6 m-0 p-0">
+    <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
+      <div class="card p-0 pl-4 pr-4" id="record"></div>
+    </div>
+    <div class="col-12 p-0 m-0 pt-3">
+      <div class="w-full mb-4 flex justify-content-between">
+        <div class="p-0 m-0">
+          <p-multiSelect
+            class="selectinput"
+            [options]="modelOptions"
+            [(ngModel)]="useModels"
+          ></p-multiSelect>
+          <p-dropdown
+            *ngIf="micOptions.length > 1"
+            class="selectinput ml-3"
+            [options]="micOptions"
+            [(ngModel)]="useMic"
+          ></p-dropdown>
+        </div>
+        <div>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-stop"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="recordFromMic()"
+            [disabled]="!isRecording"
+          ></button>
+
+          <button
+            pButton
+            type="button"
+            icon="pi pi-microphone"
+            class="p-button-secondary p-button-outlined flex-shrink-0 p-button-icon-only mr-2"
+            (click)="recordFromMic()"
+            [disabled]="isRecording"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 xl:col-6 m-0 p-0">
+    <div class="col-12 m-0 p-0 lg:mt-0 xl:mt-0">
+      <div class="card text-card ml-0 xl:ml-6 p-0 pl-4 pr-4 font-bold">
+        <p-progressBar
+          *ngIf="progressShowing"
+          class="w-full"
+          [value]="progressValue"
+          [showValue]="false"
+          [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+        ></p-progressBar>
+        {{ asrText }}
+      </div>
+    </div>
+  </div>
+</div>
+<p-table
+  [value]="soundFiles"
+  scrollDirection="both"
+  [scrollable]="true"
+  styleClass="xl:mt-3"
+  responsiveLayout="scroll"
+  sortField="created_at"
+  [sortOrder]="-1"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="cursor: pointer; width: 50%" pSortableColumn="text">
+        Detected Speech
+      </th>
+      <th pSortableColumn="label">Label</th>
+      <th pSortableColumn="id">Filename</th>
+      <th pSortableColumn="model_used" class="hidden lg:block xl:block">
+        Model
+      </th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-soundFile>
+    <tr>
+      <td style="cursor: pointer; width: 50%" (click)="selectFile(soundFile)">
+        {{ soundFile.text }}
+      </td>
+      <td>
+        {{ soundFile.label }}
+      </td>
+      <td>{{ downloadFilename(soundFile) }}</td>
+
+      <td class="hidden lg:block xl:block">
+        {{ soundFile.model_used }}
+      </td>
+
+      <td style="width: 190px">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="deleteSoundFile(soundFile)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-download"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="downloadSoundFile(soundFile)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-pencil"
+          class="p-button flex-shrink-0 p-button-outlined mr-2"
+          (click)="showUpdateLabelDialog(soundFile)"
+        ></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

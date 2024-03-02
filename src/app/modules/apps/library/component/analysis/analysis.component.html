@@ -1,0 +1,78 @@
+<app-model-select-dialog
+  [visible]="showModelDialog"
+  (onSubmit)="handleRunAnalysis($event)"
+  (onHide)="hideModelDialog()"
+></app-model-select-dialog>
+<div class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <button
+      *ngIf="!progressVisible"
+      [disabled]="jobsRunning"
+      pButton
+      type="button"
+      icon="pi pi-book"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="analyzeBook(currentBook)"
+    >
+      &nbsp;Analyze Book
+    </button>
+    <button
+      *ngIf="progressVisible"
+      [disabled]="!stopEnabled"
+      pButton
+      type="button"
+      icon="pi pi-stop"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="stopBookAnalysis(currentBook)"
+    >
+      &nbsp;Stop Analysis
+    </button>
+  </div>
+</div>
+<div
+  *ngIf="!progressVisible"
+  class="mt-4 w-full flex justify-content-between mb-4"
+>
+  <div *ngFor="let option of analysisOptions">
+    <a
+      href="#"
+      (click)="toggleAll($event, option.value)"
+      style="color: var(--primary-color)"
+      >{{ option.label }}</a
+    >
+  </div>
+</div>
+<div *ngIf="progressVisible" class="progress-bar mt-5 mb-6">
+  <p-progressBar
+    [value]="progressValue"
+    [showValue]="false"
+    [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Running AI analysis on {{ currentBook.title }}
+  </h6>
+</div>
+<div *ngFor="let item of content; let i = index">
+  <div *ngIf="item.file != 'coverpage-wrapper'" class="mb-0">
+    <p-divider *ngIf="!progressVisible" layout="horizontal" align="center">
+      <span class="p-tag mr-2">Book Chunk #{{ i }}</span>
+    </p-divider>
+    <div
+      *ngIf="!progressVisible"
+      class="w-full flex justify-content-between mb-4"
+    >
+      <div *ngFor="let option of analysisOptions">
+        <p-checkbox
+          [value]="option.value"
+          [id]="option.value"
+          [(ngModel)]="item.analyze"
+          checked="true"
+          [disabled]="item.processed_analysis.includes(option.value)"
+        ></p-checkbox>
+        <label [for]="option.value" class="ml-2">{{ option.label }}</label>
+      </div>
+    </div>
+    <div [innerHTML]="allowHtml(item.content)"></div>
+  </div>
+</div>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>

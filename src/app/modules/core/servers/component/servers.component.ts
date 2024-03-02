@@ -11,6 +11,7 @@ import { ConfirmationService, MessageService } from "primeng/api";
 import { Server } from "../api/server";
 import { ServersService } from "../service/servers.service";
 import { SocketService } from "src/app/service/sockets.service";
+import { GalleriaThumbnails } from "primeng/galleria";
 
 interface expandedRows {
   [key: string]: boolean;
@@ -46,67 +47,6 @@ export class GolemComponent implements OnInit, OnDestroy {
     private serverService: ServersService,
     private socketService: SocketService
   ) {}
-
-  configureSkillSubmit() {
-    this.showConfigureSkillDialog = false;
-
-    this.messageService.add({
-      severity: "info",
-      summary: "Skill Configuration",
-      detail: "Skill configuration sent to server",
-    });
-  }
-
-  configureSkill(event: any, skill: any) {
-    if (!skill.configuration_template) {
-      return;
-    }
-
-    this.skillTemplate = skill.configuration_template;
-    this.skillData = skill.configuration;
-    this.showConfigureSkillDialog = true;
-  }
-
-  stopSkill(event: any, skill: any) {
-    this.confirmationService.confirm({
-      key: "confirmPopup",
-      target: event.target || new EventTarget(),
-      message: "Are you sure that you want to stop this skill?",
-      icon: "pi pi-exclamation-triangle",
-      accept: () => {
-        this.messageService.add({
-          severity: "info",
-          summary: "Stopping Skill",
-          detail: "Sending message to server to stop skill",
-        });
-
-        const payload = {
-          routing_key: skill.routing_key,
-          device: skill.device,
-          use_precision: skill.use_precision,
-          server_id: skill.server_id,
-        };
-
-        this.serverService.stopSkill(payload);
-        this.serverService.getServers();
-
-        for (let i = 0; i < this.skills.length; i++) {
-          const checkSkill = this.skills[i];
-          if (
-            checkSkill.routing_key == skill.routing_key &&
-            checkSkill.server_id == skill.server_id &&
-            checkSkill.device == skill.device &&
-            checkSkill.use_precision == skill.use_precision
-          ) {
-            delete this.skills[i];
-            this.skills.splice(i, 1);
-            break;
-          }
-        }
-      },
-      reject: () => {},
-    });
-  }
 
   expandAll() {
     if (!this.isExpanded) {
@@ -148,7 +88,6 @@ export class GolemComponent implements OnInit, OnDestroy {
           ? parseFloat(((gpuUsed.raw / gpuTotal.raw) * 100).toPrecision(2))
           : 0;
         data.gpu_ram_total = gpuTotal.value;
-
         //data.index = this.servers.length;
 
         const skillIndex = this.buildSkillIndex(data.installed_skills);
@@ -257,6 +196,9 @@ export class GolemComponent implements OnInit, OnDestroy {
   }
 
   refreshServers() {
+    this.servers = [];
+    this.skills = [];
+    this.uses = [];
     this.serverService.getServers();
   }
 

@@ -73,16 +73,6 @@ export class OnlineSkills implements OnInit, OnDestroy {
           detail: "Sending message to server to stop skill",
         });
 
-        const payload = {
-          routing_key: skill.routing_key,
-          device: skill.device,
-          use_precision: skill.use_precision,
-          server_id: skill.server_id,
-        };
-
-        this.serverService.stopSkill(payload);
-        this.serverService.getServers();
-
         for (let i = 0; i < this.skills.length; i++) {
           const checkSkill = this.skills[i];
           if (
@@ -96,6 +86,14 @@ export class OnlineSkills implements OnInit, OnDestroy {
             break;
           }
         }
+
+        const payload = {
+          routing_key: skill.routing_key,
+          device: skill.device,
+          use_precision: skill.use_precision,
+          server_id: skill.server_id,
+        };
+        this.serverService.stopSkill(payload);
       },
       reject: () => {},
     });
@@ -175,6 +173,8 @@ export class OnlineSkills implements OnInit, OnDestroy {
   }
 
   refreshServers() {
+    this.servers = [];
+    this.skills = [];
     this.serverService.getServers();
   }
 

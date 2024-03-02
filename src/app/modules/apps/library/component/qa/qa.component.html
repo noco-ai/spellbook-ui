@@ -1,0 +1,133 @@
+<app-model-select-dialog
+  [visible]="showModelDialog"
+  (onSubmit)="handleRunGenerateQuiz($event)"
+  (onHide)="hideModelDialog()"
+></app-model-select-dialog>
+<p-confirmPopup key="confirmPopup"></p-confirmPopup>
+<p-toast></p-toast>
+<div class="grid flex" style="position: relative">
+  <div class="pr-3" style="position: absolute; right: 0px; top: -70px">
+    <button
+      pButton
+      type="button"
+      [icon]="showAllAnswers ? 'pi pi-eye-slash' : 'pi pi-eye'"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="toggleShowAllAnswers()"
+      *ngIf="quizSet.length && doneLoading"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-image"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      (click)="generateQuiz(currentBook)"
+      [disabled]="jobsRunning"
+      *ngIf="qaSet.length && doneLoading && !quizCreationRunning"
+    >
+      &nbsp;Generate Quiz
+    </button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-stop"
+      class="p-button flex-shrink-0 p-button-outlined mr-2"
+      *ngIf="quizCreationRunning && doneLoading"
+      [disabled]="!stopEnabled"
+      (click)="stopQuizCreation(currentBook)"
+    >
+      &nbsp;Stop Generation
+    </button>
+  </div>
+</div>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="quizCreationRunning">
+  <p-progressBar
+    [value]="progressValue"
+    [showValue]="false"
+    [mode]="progressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Generating multiple choice quiz for {{ currentBook.title }}
+  </h6>
+</div>
+<div class="p-1 m-0 mb-4 mt-4" *ngIf="aiAnalysisRunning">
+  <p-progressBar
+    [value]="analysisProgressValue"
+    [showValue]="false"
+    [mode]="analysisProgressValue == -1 ? 'indeterminate' : 'determinate'"
+  ></p-progressBar>
+  <h6 style="text-align: center" class="w-full">
+    Running
+    <a
+      style="color: var(--primary-color)"
+      href="#/library/analyze/{{ currentBook.id }}"
+      >AI Analysis</a
+    >
+    on {{ currentBook.title }}
+  </h6>
+</div>
+<h6
+  *ngIf="doneLoading && !jobsRunning && !qaSet.length && !quizSet.length"
+  class="ml-3"
+>
+  No question and answer sets have been extracted from the book. Run
+  <a
+    style="color: var(--primary-color)"
+    href="#/library/analyze/{{ currentBook.id }}"
+    >AI Analysis</a
+  >
+  with Q/A extraction.
+</h6>
+<div *ngIf="quizSet.length" class="w-full mb-4 mt-4 grid flex">
+  <ng-container *ngFor="let item of quizSet">
+    <p-divider layout="horizontal" align="center" class="w-full">
+      <span class="p-tag mr-2">Question #{{ item.chunk }}</span>
+    </p-divider>
+    <div *ngIf="item.question?.length" class="col-12">
+      <b>Question:</b> {{ item.question }}
+    </div>
+    <div *ngIf="item.answer && showAllAnswers" class="col-12">
+      <b>Answer:</b> {{ item.quiz[item.answer].answer }}
+    </div>
+
+    <ng-container *ngFor="let qa of item.quiz">
+      <div *ngIf="qa.answer?.length" class="col-12 flex">
+        <p-radioButton
+          [value]="qa.index"
+          [(ngModel)]="item.guess"
+          (onClick)="selectAnswer(item, qa.index)"
+        ></p-radioButton>
+        <div
+          [class.shake-text]="qa.shaking"
+          [class.correct]="item.answer == qa.index && item.guess == item.answer"
+          [class.incorrect]="
+            item.guess == qa.index && item.guess != item.answer
+          "
+          (click)="selectAnswer(item, qa.index)"
+          class="ml-2"
+          style="cursor: pointer"
+        >
+          {{ qa.answer }}
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>
+<h3
+  *ngIf="doneLoading && qaSet.length && quizSet.length"
+  class="ml-0 mt-8"
+  style="color: var(--primary-color); text-align: center"
+>
+  Questions/Answers
+</h3>
+<div *ngIf="qaSet.length" class="w-full mb-4 mt-4 grid flex">
+  <ng-container *ngFor="let item of qaSet">
+    <ng-container *ngFor="let qa of item.qa_set">
+      <div *ngIf="qa.question?.length && qa.answer?.length" class="col-6">
+        <b>Question:</b> {{ qa.question }}
+      </div>
+      <div *ngIf="qa.question?.length && qa.answer?.length" class="col-6">
+        <b>Answer:</b> {{ qa.answer }}
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

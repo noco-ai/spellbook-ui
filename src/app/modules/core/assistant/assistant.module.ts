@@ -25,6 +25,10 @@ import { UploadedFilesComponent } from "./component/uploaded-files/uploaded-file
 import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
 import { AccordionModule } from "primeng/accordion";
+import { DigitalAlliesComponent } from "./component/digital-allies/digital-allies.component";
+import { EditAllyComponent } from "./component/edit-ally/edit-ally.component";
+import { FieldsetModule } from "primeng/fieldset";
+import { InputSwitchModule } from "primeng/inputswitch";
 
 @NgModule({
   imports: [
@@ -48,12 +52,16 @@ import { AccordionModule } from "primeng/accordion";
     KeyFilterModule,
     ToastModule,
     AccordionModule,
+    FieldsetModule,
+    InputSwitchModule,
   ],
   declarations: [
     ChatSidebarComponent,
     ChatAppComponent,
     ChatBoxComponent,
     UploadedFilesComponent,
+    DigitalAlliesComponent,
+    EditAllyComponent,
   ],
   providers: [AssistantService, MessageService],
 })
